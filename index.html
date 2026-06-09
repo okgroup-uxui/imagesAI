@@ -1669,7 +1669,18 @@ const AGENTS = [
 ];
 
 async function routeByAI(inputText) {
-  const agentList = AGENTS.map(a => `- ${a.id}: ${a.desc}`).join('\n');
+  // 1차: 키워드 직접 매칭 (빠르고 정확)
+  for (const agent of AGENTS) {
+    if (agent.keywords.some(kw => inputText.includes(kw))) {
+      return agent;
+    }
+  }
+
+  // 2차: 키워드 미매칭 시 AI 라우팅
+  const agentList = AGENTS.map(a =>
+    `- ${a.id}: ${a.desc} (키워드: ${a.keywords.join(', ')})`
+  ).join('\n');
+
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1677,13 +1688,22 @@ async function routeByAI(inputText) {
       model: 'claude-sonnet-4-20250514',
       max_tokens: 100,
       system: `당신은 OK저축은행 디자인 시스템의 라우터입니다.
-사용자 입력을 보고 아래 에이전트 중 가장 적합한 것의 id를 JSON으로만 반환하세요.
-반드시 {"agent":"id"} 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요.
+사용자의 디자인 요청을 분석해 가장 적합한 에이전트 id를 반환하세요.
+반드시 {"agent":"id"} JSON만 반환. 다른 텍스트 절대 금지.
 
 에이전트 목록:
 ${agentList}
 
-해당 없으면 {"agent":"illust"} 반환.`,
+판단 기준:
+- 현수막, 배너현수막, 행사 대형 인쇄물 → banner
+- 명함, 비즈니스카드 → bizcard
+- 일러스트, 그림, 이미지 생성 → illust
+- 캐릭터, 마스코트, 이모티콘 → character
+- 웹 팝업창, 모달 → popup
+- 웹 배너, 광고 배너 → webbanner
+- 로고 파일 다운로드 → logo
+- 폰트 파일 다운로드 → font
+위 기준에 해당 없으면 반드시 {"agent":"illust"} 반환.`,
       messages: [{ role: 'user', content: inputText }],
     }),
   });
