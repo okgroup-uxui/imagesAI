@@ -96,15 +96,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 }
 #hudBottom.on{opacity:1;}
 
-/* ── SIDE DATA (미사용) ───────────────────────── */
-
-
 /* ── ARC SVG ──────────────────────────────────── */
 #arcSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;}
 
 /* ── A: 파티클 캔버스 ─────────────────────────── */
 #particleCanvas{
-  position:absolute;inset:0;width:100%;height:100%;
+  position:fixed;inset:0;width:100%;height:100%;
   pointer-events:none;z-index:2;opacity:0;
   transition:opacity 1.2s ease;
 }
@@ -135,6 +132,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 }
 #bootUi{
   position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
   pointer-events:none;
 }
 .boot-logo{
@@ -170,8 +168,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 .tline{
   display:block;
   font-family:'OKLight','Noto Sans KR',sans-serif;
-  font-size:clamp(13px,2vw,16px);font-weight:300;line-height:1.9;
-  letter-spacing:0.12em;color:rgba(255,220,160,0.65);
+  font-size:clamp(13px,2vw,24px);font-weight:300;line-height:1.5;
+  letter-spacing:0.03em;color:rgba(255,220,160,0.65);
   opacity:0;transform:translateY(8px);
   transition:opacity 0.7s ease,transform 0.7s ease;
 }
@@ -181,12 +179,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
   font-family:'OKLight','Noto Sans KR',sans-serif;
   font-size:1em;font-weight:500;
 }
+/* ── MAIN ─────────────────────────────────────── */
+.mainWrap {width: 100%; height: 100%; position: absolute; top: 0; left: 0;}
 
 /* ── ORB ─────────────────────────────────────── */
 #orbWrap{
-  position:absolute;left:50%;transform:translateX(-50%);
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   z-index:3;display:flex;align-items:center;justify-content:center;
-  transition:top 0.9s cubic-bezier(0.32,0,0.18,1);
+  transition:none;
 }
 #orbCanvas{display:block;}
 
@@ -199,7 +199,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 .msg-inner{
   display:inline-block;
   font-family:'Orbitron',monospace;
-  font-size:clamp(12px,2vw,16px);
+  font-size:18px;
   font-weight:500;
   line-height:1.9;letter-spacing:0.1em;
   color:rgba(245,170,32,0.9);
@@ -214,7 +214,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 .msg.on{opacity:1;}
 #m2 .msg-inner{
   font-family:'OKLight','Noto Sans KR',sans-serif;
-  font-size:clamp(12px,1.6vw,15px);
   font-weight:300;
   color:rgba(255,200,100,0.60);
   letter-spacing:0.08em;
@@ -277,7 +276,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 .tlabel{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.35em;color:rgba(200,140,60,0.70);}
 #touchLabel{
   font-family:'OKLight','Noto Sans KR',sans-serif;
-  font-size:12px;letter-spacing:0.2em;
+  font-size:16px;letter-spacing:1.5px; line-height: 22px;
   color:rgba(200,140,60,0.70);white-space:nowrap;pointer-events:none;text-align:center;
   animation:label-breathe 2.5s ease-in-out infinite;
 }
@@ -302,7 +301,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 #pInput{
   width:100%;background:transparent;border:none;outline:none;
   resize:none;overflow:hidden;
-  font-size:15px;line-height:1.9;color:rgba(255,220,150,0.90);
+  font-size:18px;line-height:1.9;color:rgba(255,220,150,0.90);
   text-align:center;
   font-family:'OKLight','Noto Sans KR',sans-serif;
   caret-color:rgba(245,170,32,0.8);
@@ -312,30 +311,92 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 #pInput::placeholder{
   color:rgba(224,125,8,0.30);
   font-family:'OKLight','Noto Sans KR',sans-serif;
-  font-size:15px;font-weight:300;letter-spacing:0.06em;
+  font-size:18px;font-weight:300;letter-spacing:0.06em;
   line-height:2.0;text-align:center;
 }
-
-
 
 /* ── CHIPS ─────────────────────────────────────── */
 .chip{
   position:absolute;z-index:20;
-  padding:8px 20px;
-  border:none;
-  border-bottom:1px solid rgba(224,125,8,0.18);
-  border-radius: 20px;
-  background:rgba(229, 184, 138, 0.15);
+  border-radius:50%;
+  border:1.5px solid rgba(224,125,8,0.55);
+  background:rgba(6,7,13,0.88);
+  box-shadow:0 0 10px rgba(224,125,8,0.18),inset 0 0 10px rgba(224,125,8,0.06);
   font-family:'OKLight','Noto Sans KR',sans-serif;
-  font-size:16px;letter-spacing:0.06em;font-weight:300;
-  color:rgb(224,125,8);cursor:pointer;white-space:nowrap;
-  opacity:0;transform:translateY(6px);
-  transition:opacity 0.5s cubic-bezier(0.22,1,0.36,1),transform 0.5s cubic-bezier(0.22,1,0.36,1),color 0.2s,border-color 0.2s;
+  font-size:16px;letter-spacing:0.04em;font-weight:400;
+  color:rgba(245,170,32,0.90);cursor:pointer;white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  opacity:0;
+  transition:box-shadow 0.2s,border-color 0.2s,color 0.2s;
+  will-change:transform,opacity;
 }
-.chip::before{content:none;}
-.chip:hover{color:rgba(245,170,32,0.85);border-bottom-color:rgba(224,125,8,0.4);}
-.chip.sel{color:rgba(245,170,32,0.95);border-bottom-color:rgba(245,170,32,0.5);}
-.chip.show{opacity:1;transform:translateY(0);}
+/* 각 chip마다 다른 float 타이밍 — nth-child로 delay */
+.chip.show{opacity:1;}
+.chip.show:not(:hover):not(.sel){
+  animation:chip-float var(--float-dur,5s) ease-in-out var(--float-delay,0s) infinite;
+}
+@keyframes chip-float{
+  0%,100%{transform:translateY(0px);}
+  50%{transform:translateY(var(--float-amp,-8px));}
+}
+.chip:nth-child(1){--float-dur:5.2s;--float-delay:0s;   --float-amp:-7px;}
+.chip:nth-child(2){--float-dur:4.8s;--float-delay:0.7s; --float-amp:-10px;}
+.chip:nth-child(3){--float-dur:5.6s;--float-delay:1.3s; --float-amp:-6px;}
+.chip:nth-child(4){--float-dur:4.5s;--float-delay:0.3s; --float-amp:-9px;}
+.chip:nth-child(5){--float-dur:5.9s;--float-delay:1.0s; --float-amp:-8px;}
+.chip:nth-child(6){--float-dur:4.7s;--float-delay:1.7s; --float-amp:-11px;}
+.chip:nth-child(7){--float-dur:5.3s;--float-delay:0.5s; --float-amp:-7px;}
+#kw0{--float-dur:5.2s;--float-delay:0s;   --float-amp:-7px;}
+#kw1{--float-dur:4.8s;--float-delay:0.7s; --float-amp:-10px;}
+#kw2{--float-dur:5.6s;--float-delay:1.3s; --float-amp:-6px;}
+#kw3{--float-dur:4.5s;--float-delay:0.3s; --float-amp:-9px;}
+#kw4{--float-dur:5.9s;--float-delay:1.0s; --float-amp:-8px;}
+#kw5{--float-dur:4.7s;--float-delay:1.7s; --float-amp:-11px;}
+#kw6{--float-dur:5.3s;--float-delay:0.5s; --float-amp:-7px;}
+.chip::before{
+  content:'';position:absolute;inset:-5px;border-radius:50%;
+  border:1px solid rgba(224,125,8,0.20);
+  pointer-events:none;
+}
+.chip::after{
+  content:'';position:absolute;inset:6px;border-radius:50%;
+  border:1px dashed rgba(224,125,8,0.18);
+  pointer-events:none;
+}
+@keyframes chip-vibrate{
+  0%,100%{transform:translate(0,0);}
+  25%{transform:translate(-1px,0.5px);}
+  50%{transform:translate(1px,-0.5px);}
+  75%{transform:translate(-0.5px,1px);}
+}
+.chip:hover{
+  color:rgba(255,200,80,1);
+  border-color:rgba(245,170,32,0.80);
+  box-shadow:0 0 18px rgba(224,125,8,0.40),inset 0 0 14px rgba(224,125,8,0.12);
+  animation:chip-vibrate 0.6s ease-in-out infinite;
+}
+.chip.sel{
+  color:rgba(255,220,100,1);
+  border-color:rgba(245,170,32,0.95);
+  box-shadow:0 0 22px rgba(245,170,32,0.55),inset 0 0 16px rgba(245,170,32,0.14);
+}
+
+/* ── ORB CENTER LABEL ───────────────────────────── */
+#orbOko{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Orbitron',monospace;
+  font-size:clamp(28px,6vw,52px);
+  font-weight:900;letter-spacing:0.18em;
+  color:rgba(245,170,32,0.08);
+  text-shadow:0 0 40px rgba(245,170,32,0.12);
+  pointer-events:none;z-index:2;
+  user-select:none;
+  animation:oko-breathe 4s ease-in-out infinite;
+}
+@keyframes oko-breathe{
+  0%,100%{color:rgba(245,170,32,0.08);text-shadow:0 0 40px rgba(245,170,32,0.10);}
+  50%{color:rgba(245,170,32,0.18);text-shadow:0 0 60px rgba(245,170,32,0.25),0 0 20px rgba(255,180,50,0.15);}
+}
 
 /* ── GEN BTN ───────────────────────────────────── */
 #genBtn{
@@ -350,38 +411,55 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 
 #genBtn .btn-inner{
   position:relative;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px 40px;
-  background:transparent;
-  border:1px solid rgba(224,125,8,0.35);
-  overflow:hidden;
-  transition:border-color 0.3s, background 0.3s;
+  display:flex;align-items:center;justify-content:center;
+  width:200px;height:52px;
+  border-radius:999px;
+  border: 1px solid #BF5500;
+  background: linear-gradient(90deg, #4F2711 37.02%, #512E13 64.9%, #190F0E 100%);
+  box-shadow: 0 0 20px 0 rgba(242, 225, 218, 0.20) inset, -24px -24px 60px 0 rgba(255, 87, 31, 0.20), 0 12px 72px 0 rgba(174, 113, 41, 0.80);
+  transition:background 0.25s ease, box-shadow 0.25s ease, transform 0.1s ease;
 }
 #genBtn .btn-inner::before{display:none;}
 #genBtn .btn-inner::after{display:none;}
+
+/* active 상태: 입력값 있을 때 */
+#genBtn.active-state .btn-inner{
+  border: none;
+  background: linear-gradient(90deg, #F7E05F 0%, #FF8A1C 50%, #E8AF07 100%);
+  box-shadow: 0 0 20px 0 rgba(242, 225, 218, 0.60) inset, -24px -24px 60px 0 rgba(255, 87, 31, 0.20), 0 12px 72px 0 rgba(174, 113, 41, 0.80);
+}
+
+@keyframes btnBounce{
+  0%  {transform:scale(1);}
+  20% {transform:scale(0.92);}
+  40% {transform:scale(1);}
+  60% {transform:scale(0.96);}
+  80% {transform:scale(1.04);}
+  100%{transform:scale(1);}
+}
 #genBtn:hover .btn-inner{
-  border-color:rgba(224,125,8,0.65);
-  background:rgba(224,125,8,0.06);
+  animation:btnBounce 0.7s cubic-bezier(0.36,0.07,0.19,0.97) infinite;
 }
 #genBtn:active .btn-inner{
-  background:rgba(224,125,8,0.10);
-  transform:scale(0.98);
+  transform:scale(0.97);
 }
-#genBtn .btn-icon{
-  width:14px;height:14px;position:relative;z-index:1;flex-shrink:0;opacity:0.7;
-}
-#genBtn .btn-icon svg{width:100%;height:100%;}
+#genBtn .btn-icon{display:none;}
 #genBtn .btn-text{
   position:relative;z-index:1;
-  font-family:'Orbitron',monospace;font-size:12px;font-weight:500;letter-spacing:0.28em;
-  color:rgba(224,125,8,0.80);text-transform:uppercase;white-space:nowrap;
+  font-family:'OKLight','Noto Sans KR',sans-serif;
+  font-size:16px;font-weight:500;
+  letter-spacing:0.08em;
+  color:#F5C79F;
+  white-space:nowrap;
 }
-#genBtn:hover .btn-text{color:rgba(245,170,32,0.95);}
+#genBtn.active-state .btn-text{
+  color:#fff;
+}
 #genBtn:hover{filter:none;}
 
 /* ── OVERLAY 공통 ──────────────────────────────── */
 .overlay{
-  position:absolute;inset:0;z-index:20;
+  position:absolute;inset:0;z-index:30;
   background:var(--bg);
   display:none;flex-direction:column;align-items:center;justify-content:center;
   opacity:0;transition:opacity 0.5s ease;
@@ -390,44 +468,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 .overlay.on{display:flex;}
 .overlay.fade{opacity:1;}
 
-/* ── S3: 생성 중 ────────────────────────────────── */
+/* ── S3: 라우팅 오버레이 ──────────────────────── */
 #s3{gap:0;}
-
-.s3-header{
-  text-align:center;margin-bottom:clamp(20px,4vh,40px);
-  position:relative;z-index:3;
-}
+.s3-header{text-align:center;margin-bottom:24px;}
 .s3-tag{
   font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.35em;
   color:rgba(224,125,8,0.80);text-transform:uppercase;margin-bottom:8px;
 }
 .s3-title{
-  font-family:'OKLight','Noto Sans KR',sans-serif;
-  font-size:clamp(16px,3vw,22px);font-weight:400;
-  color:rgba(255,220,160,0.9);letter-spacing:0.04em;
+  font-family:'OKLight','Noto Sans KR',sans-serif;font-size:18px;
+  color:rgba(255,240,200,0.90);line-height:1.5;
 }
 .s3-title b{color:var(--ok2);font-weight:700;}
-
-/* 오브 래퍼 */
-.s3-orb{
-  position:relative;
-  display:flex;align-items:center;justify-content:center;
-}
-
-/* 프롬프트 텍스트 */
 .s3-prompt{
-  margin-top:clamp(16px,3vh,28px);
-  font-family:'OKLight','Noto Sans KR',sans-serif;font-size:14px;
-  color:rgba(224,125,8,0.80);text-align:center;
-  max-width:320px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:'OKLight','Noto Sans KR',sans-serif;font-size:13px;
+  color:rgba(224,125,8,0.70);text-align:center;
+  margin-bottom:24px;max-width:320px;line-height:1.6;
 }
-
-/* 로딩 바 */
-.s3-bar-wrap{
-  margin-top:clamp(14px,2.5vh,24px);
-  width:clamp(220px,42vw,340px);
-}
+.s3-bar-wrap{width:280px;margin-bottom:8px;}
 .s3-bar-track{
   width:100%;height:3px;
   background:rgba(224,125,8,0.15);
@@ -435,16 +493,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 }
 .s3-bar-fill{
   height:100%;width:0%;
-  background:linear-gradient(90deg,var(--ok3),var(--ok),var(--ok2));
-  box-shadow:0 0 8px var(--okglow);
-  transition:width 0.3s ease;
+  background:linear-gradient(90deg,var(--ok3),var(--ok2));
+  transition:width 0.2s ease;
 }
-.s3-bar-info{
-  display:flex;justify-content:space-between;margin-top:6px;
-}
+.s3-bar-info{display:flex;justify-content:space-between;margin-top:6px;}
 .s3-bar-label,.s3-bar-pct{
-  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.18em;
-  color:rgba(200,140,60,0.85);
+  font-family:'Orbitron',monospace;font-size:10px;letter-spacing:0.2em;
+  color:rgba(224,125,8,0.60);
 }
 .s3-status{
   margin-top:10px;text-align:center;height:14px;
@@ -452,134 +507,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
   color:rgba(224,125,8,0.70);
   animation:fadepulse 1.5s ease-in-out infinite;
 }
-
-/* ── S4: 결과 화면 ─────────────────────────────── */
-#s4{
-  padding:clamp(20px,4vh,36px) clamp(20px,4vw,40px);
-  gap:0;justify-content:flex-start;
-}
-
-/* 상단 헤더 */
-.s4-header{
-  width:100%;display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:clamp(12px,2vh,20px);flex-shrink:0;
-}
-.s4-header-l{display:flex;flex-direction:column;gap:4px;}
-.s4-tag{
-  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.3em;
-  color:var(--ok);opacity:1;text-transform:uppercase;
-}
-.s4-title{
-  font-family:'OKLight','Noto Sans KR',sans-serif;
-  font-size:clamp(17px,3vw,22px);font-weight:400;
-  color:rgba(255,220,160,0.95);letter-spacing:0.04em;
-}
-.s4-title b{color:var(--ok2);font-weight:700;}
-.s4-header-r{
-  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.2em;
-  color:rgba(224,125,8,0.75);
-}
-
-/* 이미지 프레임 */
-.s4-frame{
-  width:100%;flex:1;min-height:0;
-  border:1px solid rgba(224,125,8,0.25);
-  background:rgba(0,0,0,0.4);
-  position:relative;overflow:hidden;
-  clip-path:polygon(14px 0%,100% 0%,100% calc(100% - 14px),calc(100% - 14px) 100%,0% 100%,0% 14px);
-}
-.s4-frame::before{
-  content:'';position:absolute;top:-1px;left:-1px;width:20px;height:20px;
-  border-top:1.5px solid var(--ok);border-left:1.5px solid var(--ok);z-index:2;
-}
-.s4-frame::after{
-  content:'';position:absolute;bottom:-1px;right:-1px;width:20px;height:20px;
-  border-bottom:1.5px solid var(--ok);border-right:1.5px solid var(--ok);z-index:2;
-}
-.s4-canvas-wrap{
-  position:absolute;inset:0;
-}
-.s4-canvas-wrap canvas{
-  position:absolute;inset:0;width:100%;height:100%;
-}
-
-/* 프롬프트 태그 */
-.s4-prompt-tag{
-  flex-shrink:0;margin-top:10px;
-  display:flex;align-items:center;gap:8px;
-}
-.s4-prompt-label{
-  font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.2em;
-  color:rgba(200,140,60,0.90);white-space:nowrap;
-}
-.s4-prompt-val{
-  font-family:'OKLight','Noto Sans KR',sans-serif;font-size:15px;
-  color:rgba(255,200,120,0.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  flex:1;
-}
-
-/* 액션 버튼들 */
-.s4-actions{
-  flex-shrink:0;margin-top:clamp(10px,2vh,16px);
-  width:100%;display:flex;justify-content:center;
-}
-.s4-btn{
-  padding:13px 48px;
-  border:1px solid rgba(224,125,8,0.45);
-  background:rgba(224,125,8,0.06);
-  color:rgba(224,125,8,0.80);
-  font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:0.28em;
-  cursor:pointer;text-transform:uppercase;
-  transition:all 0.2s;
-  clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);
-}
-.s4-btn:hover{
-  background:rgba(224,125,8,0.10);
-  color:var(--ok);
-  border-color:rgba(224,125,8,0.5);
-  box-shadow:0 0 12px rgba(224,125,8,0.15);
-}
-.s4-btn.primary{
-  border-color:rgba(224,125,8,0.55);
-  background:rgba(224,125,8,0.10);
-  color:var(--ok2);
-  font-weight:700;
-}
-.s4-btn.primary:hover{
-  background:rgba(224,125,8,0.18);
-  box-shadow:0 0 18px rgba(224,125,8,0.25);
-}
-.s4-restart{
-  background:transparent;border:none;
-  font-family:'Orbitron',monospace;font-size:12px;font-weight:500;letter-spacing:0.22em;
-  color:rgba(224,125,8,0.30);cursor:pointer;
-  transition:color 0.2s;white-space:nowrap;
-  padding:10px 0;text-transform:uppercase;
-  display:block;margin:0 auto;
-}
-.s4-restart:hover{color:rgba(224,125,8,0.65);}
-
 @keyframes fadepulse{0%,100%{opacity:0.35;}50%{opacity:1;}}
 
 @keyframes cursor-blink{0%,100%{opacity:1;}50%{opacity:0;}}
 
-/* ── INPUT SHAKE ───────────────────────────────── */
-@keyframes shake{
+/* ── ORB ERROR SHAKE ──────────────────────────── */
+@keyframes orbShake{
   0%,100%{transform:translate(-50%,-50%) translateX(0);}
-  20%{transform:translate(-50%,-50%) translateX(-6px);}
-  40%{transform:translate(-50%,-50%) translateX(6px);}
-  60%{transform:translate(-50%,-50%) translateX(-4px);}
-  80%{transform:translate(-50%,-50%) translateX(4px);}
+  15%{transform:translate(-50%,-50%) translateX(-10px);}
+  30%{transform:translate(-50%,-50%) translateX(10px);}
+  45%{transform:translate(-50%,-50%) translateX(-8px);}
+  60%{transform:translate(-50%,-50%) translateX(8px);}
+  75%{transform:translate(-50%,-50%) translateX(-5px);}
+  90%{transform:translate(-50%,-50%) translateX(5px);}
 }
-#inputWrap.shake{animation:shake 0.35s ease;}
-.input-frame.error{
-  border-color:rgba(255,80,60,0.7)!important;
-  box-shadow:0 0 12px rgba(255,60,40,0.2);
-}
-.input-frame.error::before,.input-frame.error::after{
-  border-color:rgba(255,80,60,0.8)!important;
-}
-
+#orbWrap.orb-error{animation:orbShake 0.5s ease;}
 
 /* ── OK 로고 ───────────────────────────────────── */
 #okLogo{
@@ -625,7 +567,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
   <!-- Bottom HUD -->
   <div id="hudBottom">
     <div class="hud-label" id="clockTxt">--:--:--</div>
-    <div class="hud-label">IMAGE STUDIO v5.0</div>
+    <div class="hud-label">AI DESIGN ENGINE v5.0</div>
   </div>
 
   <!-- 장식 Arc SVG -->
@@ -656,34 +598,37 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 
   <!-- ── MAIN ── -->
   <div id="titleWrap">
-    <span class="tline" id="tl0">OKO가 그려주는</span>
-    <span class="tline" id="tl1"><b>일러스트</b>를 만나보세요</span>
+    <span class="tline" id="tl0">무엇이든 말씀하세요</span>
+    <span class="tline" id="tl1"><b>OKO</b>가 만들어 드리겠습니다</span>
   </div>
 
-  <div id="orbWrap">
-    <canvas id="orbCanvas"></canvas>
-    <div class="msg" id="m0"><span class="msg-inner">HELLO</span></div>
-    <div class="msg" id="m1"><span class="msg-inner">I AM OKO.<br/>AT YOUR SERVICE</span></div>
-    <div class="msg" id="m2"><span class="msg-inner">이미지,<br/>만들어 드리겠습니다</span></div>
-    <div id="touchBtn">
-      <div class="ticon">
-        <div class="tring"></div>
-        <div class="tring"></div>
-        <div class="tring"></div>
-        <div class="ticon-core">
-          <svg width="16" height="16" viewBox="0 0 13 16" fill="none">
-            <path d="M1 1 L1 13 L4.2 9.8 L6.4 15 L8.2 14.2 L6 9 L10 9 Z"
-              stroke="rgba(224,125,8,0.95)" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round"
-              fill="rgba(224,125,8,0.10)"/>
-          </svg>
+  <div class="mainWrap">
+    <div id="orbWrap">
+      <canvas id="orbCanvas"></canvas>
+      <div class="msg" id="m0"><span class="msg-inner">HELLO</span></div>
+      <div class="msg" id="m1"><span class="msg-inner">I AM OKO.<br/>AT YOUR SERVICE</span></div>
+      <div class="msg" id="m2"><span class="msg-inner">이미지,<br/>만들어 드리겠습니다</span></div>
+      <div id="touchBtn">
+        <div class="ticon">
+          <div class="tring"></div>
+          <div class="tring"></div>
+          <div class="tring"></div>
+          <div class="ticon-core">
+            <svg width="16" height="16" viewBox="0 0 13 16" fill="none">
+              <path d="M1 1 L1 13 L4.2 9.8 L6.4 15 L8.2 14.2 L6 9 L10 9 Z"
+                stroke="rgba(224,125,8,0.95)" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round"
+                fill="rgba(224,125,8,0.10)"/>
+            </svg>
+          </div>
         </div>
+        <div id="touchLabel" class="tlabel">준비됐습니다.<br/>클릭해 주십시오.</div>
       </div>
-      <div id="touchLabel" class="tlabel">준비됐습니다.<br/>클릭해 주십시오.</div>
-    </div>
-    <div id="inputWrap">
-      <div class="input-frame">
-        <input type="text" id="pInput" rows="2" placeholder="원하는 이미지를 입력하세요" />
+      <div id="inputWrap">
+        <div class="input-frame">
+          <input type="text" id="pInput" placeholder="어떤 이미지가 필요하십니까" />
+        </div>
+
       </div>
     </div>
     <div class="chip" id="kw0">명함</div>
@@ -693,17 +638,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
     <div class="chip" id="kw4">폰트</div>
     <div class="chip" id="kw5">배너</div>
     <div class="chip" id="kw6">현수막</div>
-  </div>
-  <button id="genBtn"><div class="btn-inner"><div class="btn-icon"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 1L11 7H17L12.5 10.5L14.5 16.5L9 13L3.5 16.5L5.5 10.5L1 7H7L9 1Z" fill="rgba(255,230,120,0.9)" stroke="rgba(255,200,60,0.6)" stroke-width="0.5"/></svg></div><span class="btn-text">GENERATE IMAGE</span></div></button>
+    <button id="genBtn"><div class="btn-inner"><span class="btn-text">실행하기 ↵</span></div></button>
 
-  <!-- S3: 생성 중 -->
+  <!-- ── S3: 라우팅 오버레이 ── -->
   <div id="s3" class="overlay">
     <div class="s3-header">
       <div class="s3-tag">AI IMAGE STUDIO · PROCESSING</div>
       <div class="s3-title">OKO가 <b>이미지를 생성</b>하고 있습니다</div>
-    </div>
-    <div class="s3-orb">
-      <canvas id="c3"></canvas>
     </div>
     <div class="s3-prompt" id="s3PromptTxt"></div>
     <div class="s3-bar-wrap">
@@ -715,29 +656,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
     </div>
     <div class="s3-status" id="s3Status">PROCESSING · NEURAL RENDER ENGINE · · ·</div>
   </div>
+  </div><!-- /mainWrap -->
 
-  <!-- S4: 결과 -->
-  <div id="s4" class="overlay">
-    <div class="s4-header">
-      <div class="s4-header-l">
-        <div class="s4-tag">MISSION ACCOMPLISHED</div>
-        <div class="s4-title"><b>완성되었습니다</b>, 확인해보시죠</div>
-      </div>
-      <div class="s4-header-r">OK · AI</div>
-    </div>
-    <div class="s4-frame" id="w4">
-      <div class="s4-canvas-wrap"><canvas id="c4"></canvas></div>
-    </div>
-    <div class="s4-prompt-tag">
-      <span class="s4-prompt-label">PROMPT</span>
-      <span class="s4-prompt-val" id="s4PromptTxt"></span>
-    </div>
-    <div class="s4-actions">
-      <button class="s4-btn primary">↓ DOWNLOAD</button>
-    </div>
-    <button class="s4-restart" id="resetBtn">↩ RESTART SEQUENCE</button>
-  </div>
-</div>
+  <button class="s4-restart" id="resetBtn" style="display:none">↩ RESTART SEQUENCE</button>
+</div><!-- /app -->
 
 <script>
 (function(){
@@ -755,35 +677,69 @@ const rings=[
   {type:'thin', hue:24,sat:90,lit:65,phase:4.30,dir:-1,lw:1.4},
 ];
 
-// 오브 색상 전환 (주황 ↔ 민트)
-const ringBase =rings.map(r=>({hue:r.hue,sat:r.sat,lit:r.lit}));
-const ringMint =[
-  {hue:174,sat:85,lit:52},
-  {hue:180,sat:80,lit:65},
-  {hue:170,sat:88,lit:56},
-  {hue:178,sat:82,lit:48},
-  {hue:182,sat:84,lit:68},
-  {hue:172,sat:86,lit:58},
-  {hue:176,sat:80,lit:62},
-];
-let orbFocus=0, orbFocusTarget=0, orbFocusRaf=null;
-function animateOrbFocus(){
-  const diff=orbFocusTarget-orbFocus;
-  if(Math.abs(diff)<0.005){ orbFocus=orbFocusTarget; orbFocusRaf=null; return; }
-  orbFocus+=diff*0.018;
-  rings.forEach((r,i)=>{
-    r.hue =ringBase[i].hue +(ringMint[i].hue -ringBase[i].hue )*orbFocus;
-    r.sat =ringBase[i].sat +(ringMint[i].sat -ringBase[i].sat )*orbFocus;
-    r.lit =ringBase[i].lit +(ringMint[i].lit -ringBase[i].lit )*orbFocus;
-  });
-  orbFocusRaf=requestAnimationFrame(animateOrbFocus);
+/* ─── ORB COLOR SYSTEM ─────────────────────────
+   상태: 'orange' | 'yellow' | 'red'
+   - focus → yellow
+   - 빈 입력 실행 → red (다른 액션까지 유지)
+   - blur / chip클릭 → orange
+─────────────────────────────────────────────── */
+const ringPalette={
+  orange: rings.map(r=>({hue:r.hue,sat:r.sat,lit:r.lit})),
+  yellow: [
+    {hue:52, sat:98, lit:62},
+    {hue:48, sat:100,lit:58},
+    {hue:55, sat:96, lit:66},
+    {hue:50, sat:99, lit:60},
+    {hue:56, sat:97, lit:68},
+    {hue:46, sat:100,lit:56},
+    {hue:53, sat:98, lit:64},
+  ],
+  red: [
+    {hue:0,  sat:92, lit:52},
+    {hue:355,sat:90, lit:60},
+    {hue:5,  sat:91, lit:55},
+    {hue:350,sat:90, lit:50},
+    {hue:8,  sat:92, lit:58},
+    {hue:2,  sat:91, lit:54},
+    {hue:358,sat:90, lit:56},
+  ],
+};
+
+let orbColorState='orange'; // 현재 목표 색상
+let orbColorRaf=null;
+
+function setOrbColor(target){
+  // red 상태에서는 orange/yellow로 덮어쓸 수 있음
+  // 단, 이미 같은 상태면 스킵
+  if(orbColorState===target) return;
+  orbColorState=target;
+  const from=rings.map(r=>({hue:r.hue,sat:r.sat,lit:r.lit}));
+  const to=ringPalette[target];
+  let p=0;
+  if(orbColorRaf){ cancelAnimationFrame(orbColorRaf); orbColorRaf=null; }
+  function step(){
+    p=Math.min(p+0.055, 1);
+    rings.forEach((r,i)=>{
+      r.hue=from[i].hue+(to[i].hue-from[i].hue)*p;
+      r.sat=from[i].sat+(to[i].sat-from[i].sat)*p;
+      r.lit=from[i].lit+(to[i].lit-from[i].lit)*p;
+    });
+    if(p<1) orbColorRaf=requestAnimationFrame(step);
+    else orbColorRaf=null;
+  }
+  orbColorRaf=requestAnimationFrame(step);
 }
-function setOrbFocus(focused){
-  orbFocusTarget=focused?1:0;
-  if(!orbFocusRaf) orbFocusRaf=requestAnimationFrame(animateOrbFocus);
+
+function triggerOrbError(){
+  setOrbColor('red');
+  // shake 애니메이션
+  const ow=document.getElementById('orbWrap');
+  ow.classList.remove('orb-error');
+  void ow.offsetWidth;
+  ow.classList.add('orb-error');
+  setTimeout(()=>ow.classList.remove('orb-error'),550);
 }
-document.getElementById('pInput').addEventListener('focus',()=>setOrbFocus(true));
-document.getElementById('pInput').addEventListener('blur', ()=>setOrbFocus(false));
+
 
 const app=document.getElementById('app');
 const bgCv=document.getElementById('bgCanvas'),bgCtx=bgCv.getContext('2d');
@@ -842,8 +798,7 @@ function getTalkScale(){if(!talk.active)return 1;return 1+0.010*Math.exp(-1.4*ta
 
 /* ─── CANVASES & DOM REFS ───────────────────────── */
 const orbCv=document.getElementById('orbCanvas'),orbCtx=orbCv.getContext('2d');
-const c3=document.getElementById('c3'),x3=c3.getContext('2d');
-const c4=document.getElementById('c4'),x4=c4.getContext('2d');
+
 const titleWrap=document.getElementById('titleWrap');
 const orbWrap=document.getElementById('orbWrap');
 const genBtn=document.getElementById('genBtn');
@@ -867,40 +822,24 @@ function layout(){
   const titleH=titleWrap.clientHeight||50;
   const btnH=44;
 
-  if(!titleShown){
-    const totalH=titleH+GAP+size;
-    const sy=Math.max(PAD,(AH-totalH)/2);
-    orbWrap.style.top=(sy+titleH+GAP)+'px';
-    titleWrap.style.top=sy+'px';
-    genBtn.style.top=(sy+titleH+GAP+size+GAP)+'px';
-  } else if(!inputMode){
-    const totalH=titleH+GAP+size;
-    const sy=Math.max(PAD,(AH-totalH)/2);
-    titleWrap.style.top=sy+'px';
-    orbWrap.style.top=(sy+titleH+GAP)+'px';
-    genBtn.style.top=(sy+titleH+GAP+size+GAP)+'px';
-  } else {
-    const totalH=titleH+GAP+size+GAP+btnH;
-    const sy=Math.max(PAD,(AH-totalH)/2);
-    titleWrap.style.top=sy+'px';
-    orbWrap.style.top=(sy+titleH+GAP)+'px';
-    genBtn.style.top=(sy+titleH+GAP+size+GAP)+'px';
-  }
+  // 오브 중심 = AH/2, 오브 상단 = AH/2 - size/2
+  const orbTopY = AH/2 - size/2;
+
+  titleWrap.style.top=(orbTopY - GAP - titleH)+'px';
+  genBtn.style.top=(orbTopY + size + GAP)+'px';
 
   const BR=size*0.38;
-  document.querySelectorAll('.msg').forEach(el=>el.style.fontSize=Math.max(12,Math.round(BR*0.16))+'px');
+  // msg fontSize: CSS 기본값 사용 (18px)
   const is=Math.max(44,Math.round(BR*0.30));
   const ti=document.querySelector('.ticon');if(ti){ti.style.width=is+'px';ti.style.height=is+'px';}
   const tc=document.querySelector('.ticon-core');if(tc){tc.style.width=Math.round(is*0.8)+'px';tc.style.height=Math.round(is*0.8)+'px';}
-  document.getElementById('pInput').style.fontSize=Math.max(12,Math.round(BR*0.11))+'px';
 
   // arc SVG
   if(AW!==_lastAW||AH!==_lastAH){
     _lastAW=AW;_lastAH=AH;
     const svg=document.getElementById('arcSvg');
     const cx=AW/2;
-    const orbTop=parseFloat(orbWrap.style.top||0);
-    const orbCy=orbTop+size/2;
+    const orbCy=AH/2; // 오브는 화면 정중앙
     svg.innerHTML=`
       <circle cx="${cx}" cy="${orbCy}" r="${size*0.62}" fill="none" stroke="rgba(200,80,10,0.03)" stroke-width="1" stroke-dasharray="4 14"/>
       <circle cx="${cx}" cy="${orbCy}" r="${size*0.85}" fill="none" stroke="rgba(200,80,10,0.015)" stroke-width="1" stroke-dasharray="2 22"/>
@@ -947,19 +886,6 @@ function drawOrb(ctx,W,H,t,talkScale,squish){
   ctx.translate(cx, cy);
   ctx.scale(pulse, pulse);
   ctx.translate(-cx, -cy);
-
-  // ── 틱마크 (박동 때 순간 밝아짐) ──────────────
-  const r1=BR_BASE*1.16; // 틱은 BASE 기준으로 고정
-  ctx.lineJoin='round';
-  ctx.beginPath();
-  for(let i=0;i<48;i++){if(i%3===0)continue;const a=(i/48)*Math.PI*2+t*0.15;ctx.moveTo(cx+r1*Math.cos(a),cy+r1*Math.sin(a));ctx.lineTo(cx+(r1+3)*Math.cos(a),cy+(r1+3)*Math.sin(a));}
-  ctx.strokeStyle=`rgba(180,80,10,${0.16+hb*0.22})`;ctx.lineWidth=0.8;ctx.stroke();
-  ctx.beginPath();
-  for(let i=0;i<48;i++){if(i%6===0||i%3!==0)continue;const a=(i/48)*Math.PI*2+t*0.15;ctx.moveTo(cx+r1*Math.cos(a),cy+r1*Math.sin(a));ctx.lineTo(cx+(r1+6)*Math.cos(a),cy+(r1+6)*Math.sin(a));}
-  ctx.strokeStyle=`rgba(200,100,10,${0.30+hb*0.30})`;ctx.lineWidth=0.8;ctx.stroke();
-  ctx.beginPath();
-  for(let i=0;i<48;i++){if(i%6!==0)continue;const a=(i/48)*Math.PI*2+t*0.15;ctx.moveTo(cx+r1*Math.cos(a),cy+r1*Math.sin(a));ctx.lineTo(cx+(r1+10)*Math.cos(a),cy+(r1+10)*Math.sin(a));}
-  ctx.strokeStyle=`rgba(220,130,20,${0.50+hb*0.48})`;ctx.lineWidth=1.5;ctx.stroke();
 
   // ── 링 포인트 계산 (BR 사용 → 심박 팽창 포함) ─
   function pts(rg,ro){
@@ -1023,42 +949,159 @@ function drawOrb(ctx,W,H,t,talkScale,squish){
 
 /* ─── CHIPS ─────────────────────────────────────── */
 let cpos=[],lcw=0,lch=0,cdone=false;
+const CHIP_SIZE=120; // 원형 chip 고정 크기
+
 function placeChips(){
-  const sw=orbWrap.clientWidth,sh=orbWrap.clientHeight;
+  const mwEl=document.querySelector('.mainWrap');
+  const mwRect=mwEl.getBoundingClientRect();
+  const sw=mwRect.width, sh=mwRect.height;
   if(sw===lcw&&sh===lch&&cpos.length>0){applyCP();return;}
   lcw=sw;lch=sh;
   const chips=[...document.querySelectorAll('.chip')];
-  const cx=sw/2,cy=sh/2,BR=orbCv.width*0.38;
-  const iR=BR+34,oR=BR+108,PAD=10,MAX=300;
-  const placed=[],sz=chips.map(c=>({w:Math.max(c.offsetWidth||0,55),h:Math.max(c.offsetHeight||0,32)}));
-  function ov(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw+PAD&&ax+aw+PAD>bx&&ay<by+bh+PAD&&ay+ah+PAD>by;}
-  function inO(rx,ry,rw,rh){return Math.hypot(rx+rw/2-cx,ry+rh/2-cy)<iR+rh/2;}
-  function out(rx,ry,rw,rh){return rx<2||ry<2||rx+rw>sw-2||ry+rh>sh-2;}
-  function outO(rx,ry,rw,rh){return Math.hypot(rx+rw/2-cx,ry+rh/2-cy)>oR+rh/2;}
-  cpos=[];
-  chips.forEach((chip,i)=>{
-    const cw=sz[i].w,ch=sz[i].h;let found=false;
-    for(let k=0;k<MAX;k++){
-      const a=Math.random()*Math.PI*2,r=iR+Math.random()*(oR-iR);
-      const rx=cx+r*Math.cos(a)-cw/2,ry=cy+r*Math.sin(a)-ch/2;
-      if(out(rx,ry,cw,ch)||inO(rx,ry,cw,ch)||outO(rx,ry,cw,ch))continue;
-      if(placed.some(p=>ov(rx,ry,cw,ch,p.x,p.y,p.w,p.h)))continue;
-      placed.push({x:rx,y:ry,w:cw,h:ch});cpos.push({x:rx,y:ry});found=true;break;
+
+  // 오브 중심 (mainWrap 기준)
+  const orbRect=orbWrap.getBoundingClientRect();
+  const orbCx=orbRect.left-mwRect.left+orbRect.width/2;
+  const orbCy=orbRect.top-mwRect.top+orbRect.height/2;
+  const BR=orbCv.width*0.38;         // 오브 반지름 ~190px
+  const GAP=18;                       // 오브↔chip 최소 여백
+
+  // 오브 세로 범위 (chip y 배치 기준)
+  const orbTop=orbCy-orbRect.height/2;
+  const orbBot=orbCy+orbRect.height/2;
+  const orbH=orbBot-orbTop;
+
+  // ── 이미지 참고 배치 ──────────────────────────────
+  // chip 크기 3단계
+  const SZ={S:90, M:110, L:130};
+
+  // 7개 chip 배치 정의
+  // side: 'L'=left, 'R'=right
+  // col:  0=오브 바로 옆(안쪽), 1=바깥 열
+  // ry:   orbTop~orbBot 내 chip 중심 비율 (0=상단, 1=하단)
+  //       → 같은 side에서 ry 차이가 sz/orbH 이상이어야 겹침 없음
+  //
+  // 왼쪽(kw0~kw3): 명함/읏맨/일러스트/로고
+  // 오른쪽(kw4~kw6): 폰트/배너/현수막
+  const defs=[
+    {side:'L', col:0, ry:0.14, sz:SZ.M},  // kw0 명함     — 좌안 상단
+    {side:'L', col:1, ry:0.38, sz:SZ.S},  // kw1 읏맨     — 좌밖 중상 (작게)
+    {side:'L', col:0, ry:0.62, sz:SZ.M},  // kw2 일러스트 — 좌안 중하 (명함과 ry차 0.48)
+    {side:'L', col:1, ry:0.82, sz:SZ.L},  // kw3 로고     — 좌밖 하단 (크게)
+    {side:'R', col:0, ry:0.18, sz:SZ.M},  // kw4 폰트     — 우안 상단
+    {side:'R', col:1, ry:0.52, sz:SZ.L},  // kw5 배너     — 우밖 중간 (크게)
+    {side:'R', col:0, ry:0.80, sz:SZ.M},  // kw6 현수막   — 우안 하단
+  ];
+
+  const colGap=16; // col0↔col1 x 간격
+  const chipGap=GAP; // 오브↔chip gap
+
+  cpos=defs.map((d,i)=>{
+    const S=d.sz;
+    const cy=orbTop+orbH*d.ry;
+    const ty=Math.max(orbTop, Math.min(orbBot-S, cy-S/2));
+
+    let tx;
+    if(d.side==='L'){
+      const col0Right=orbCx-BR-chipGap;
+      if(d.col===0) tx=Math.max(6, col0Right-S);
+      else          tx=Math.max(6, col0Right-S-colGap-S);
+    } else {
+      const col0Left=orbCx+BR+chipGap;
+      if(d.col===0) tx=Math.min(sw-S-6, col0Left);
+      else          tx=Math.min(sw-S-6, col0Left+S+colGap);
     }
-    if(!found){const fa=(i/chips.length)*Math.PI*2,fr=iR+20;cpos.push({x:cx+fr*Math.cos(fa)-cw/2,y:cy+fr*Math.sin(fa)-ch/2});}
+    return {x:tx, y:ty, s:S};
   });
+
+  // ── 겹침 방지: 같은 x열끼리 y 충돌 시 밀어내기 ──
+  const PAD_CHIP=10; // chip 사이 최소 여백
+  for(let pass=0;pass<3;pass++){
+    for(let i=0;i<cpos.length;i++){
+      for(let j=i+1;j<cpos.length;j++){
+        const a=cpos[i], b=cpos[j];
+        // x축으로 겹치는 chip만 y 충돌 체크
+        const ax1=a.x, ax2=a.x+a.s, bx1=b.x, bx2=b.x+b.s;
+        if(ax2+PAD_CHIP<=bx1||bx2+PAD_CHIP<=ax1) continue; // x 안겹침
+        const ay1=a.y, ay2=a.y+a.s, by1=b.y, by2=b.y+b.s;
+        const overlap=Math.min(ay2,by2)-Math.max(ay1,by1);
+        if(overlap<=0) continue;
+        // 겹치면 절반씩 밀어내기
+        const push=(overlap+PAD_CHIP)/2;
+        cpos[i]={...a, y:Math.max(orbTop,a.y-push)};
+        cpos[j]={...b, y:Math.min(orbBot-b.s,b.y+push)};
+      }
+    }
+  }
+
   applyCP();
 }
-function applyCP(){document.querySelectorAll('.chip').forEach((c,i)=>{if(!cpos[i])return;c.style.left=cpos[i].x+'px';c.style.top=cpos[i].y+'px';});}
-function animChips(){if(cdone)return;cdone=true;document.querySelectorAll('.chip').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),120+i*130));}
-function resetChips(){cdone=false;cpos=[];lcw=0;lch=0;document.querySelectorAll('.chip').forEach(c=>{c.classList.remove('show','sel');c.style.opacity='0';c.style.transform='translateY(10px)';});}
 
-function showOverlay(id,cb){
-  const prev=document.querySelector('.overlay.on');
-  if(prev){prev.style.opacity='0';setTimeout(()=>{prev.classList.remove('on','fade');const n=document.getElementById(id);n.classList.add('on');requestAnimationFrame(()=>requestAnimationFrame(()=>{n.classList.add('fade');if(cb)cb();}));},320);}
-  else{const n=document.getElementById(id);n.classList.add('on');requestAnimationFrame(()=>requestAnimationFrame(()=>{n.classList.add('fade');if(cb)cb();}));}
+function applyCP(){
+  document.querySelectorAll('.chip').forEach((c,i)=>{
+    if(!cpos[i])return;
+    const s=cpos[i].s||CHIP_SIZE;
+    c.style.position='absolute';
+    c.style.left=cpos[i].x+'px';
+    c.style.top=cpos[i].y+'px';
+    c.style.width=s+'px';
+    c.style.height=s+'px';
+  });
 }
-function hideOverlay(){document.querySelectorAll('.overlay.on').forEach(s=>{s.style.opacity='0';setTimeout(()=>s.classList.remove('on','fade'),320);});}
+
+function animChips(){
+  if(cdone)return;cdone=true;
+  const chips=[...document.querySelectorAll('.chip')];
+  const mwRect=document.querySelector('.mainWrap').getBoundingClientRect();
+  const orbRect=orbWrap.getBoundingClientRect();
+  const cx=orbRect.left-mwRect.left+orbRect.width/2;
+  const cy=orbRect.top-mwRect.top+orbRect.height/2;
+
+  chips.forEach((c,i)=>{
+    setTimeout(()=>{
+      if(!cpos[i])return;
+      const tx=cpos[i].x, ty=cpos[i].y;
+      const cs=cpos[i].s||CHIP_SIZE;
+      const dx=cx-(tx+cs/2);
+      const dy=cy-(ty+cs/2);
+
+      // 시작: 오브 중심에 위치, scale 0
+      c.style.transition='none';
+      c.style.transform=`translate(${dx}px,${dy}px) scale(0.1)`;
+      c.style.opacity='0.9';
+
+      // 윙 1: 천천히 오버슛
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        c.style.transition='transform 0.65s cubic-bezier(0.22,1,0.36,1), opacity 0.25s ease';
+        c.style.transform=`translate(${dx*-0.08}px,${dy*-0.08}px) scale(1.10)`;
+        c.style.opacity='1';
+
+        setTimeout(()=>{
+          c.style.transition='transform 0.40s cubic-bezier(0.34,1.56,0.64,1), opacity 0.1s';
+          c.style.transform='translate(0,0) scale(1)';
+          setTimeout(()=>{
+            c.style.transition='';
+            c.style.transform='';  // inline transform 제거 → CSS float 애니 시작
+            c.classList.add('show');
+          },420);
+        },600);
+      }));
+    }, i*300);
+  });
+}
+
+function resetChips(){
+  cdone=false;cpos=[];lcw=0;lch=0;
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.classList.remove('show','sel');
+    c.style.opacity='0';
+    c.style.transform='';
+    c.style.transition='none';
+    c.style.animation='none';
+    requestAnimationFrame(()=>{c.style.animation='';});
+  });
+}
+
 
 /* ─── MAIN LOOP — 단일 rAF ──────────────────────
    bg / orb / btnLerp 모두 여기서 한번에 처리
@@ -1075,34 +1118,9 @@ function loop(){
   // 2) talk 스케일
   if(talk.active){talk.t+=DT;if(talk.t>2.2)talk.active=false;}
 
-  // 3) orb / overlay 캔버스
-  const isLoad=document.getElementById('s3').classList.contains('on');
-  const isRes =document.getElementById('s4').classList.contains('on');
-  // heartbeat은 drawOrb 내부에서 t로 직접 계산
-  // getTalkScale()은 말할 때 추가 scale로만 사용
-  if(!isLoad&&!isRes){
-    if(orbCv.width>10) drawOrb(orbCtx,orbCv.width,orbCv.height,t,getTalkScale(),false);
-    if(phase==='input') placeChips();
-  }
-  if(isLoad){
-    const c3el=document.getElementById('c3');
-    const s3orb=document.querySelector('.s3-orb');
-    if(s3orb&&c3el){
-      const sz=Math.round(Math.min(s3orb.clientWidth,260)*0.9);
-      if(c3el.width!==sz){c3el.width=sz;c3el.height=sz;}
-      if(c3el.width>10) drawOrb(x3,c3el.width,c3el.height,t,1,false);
-    }
-  }
-  if(isRes){
-    const w4=document.getElementById('w4');
-    const c4el=document.getElementById('c4');
-    if(w4&&c4el&&w4.clientWidth>10){
-      if(c4el.width!==w4.clientWidth||c4el.height!==w4.clientHeight){
-        c4el.width=w4.clientWidth;c4el.height=w4.clientHeight;
-      }
-      if(c4el.width>10) drawOrb(x4,c4el.width,c4el.height,t,1,false);
-    }
-  }
+  // 3) orb 캔버스
+  if(orbCv.width>10) drawOrb(orbCtx,orbCv.width,orbCv.height,t,getTalkScale(),false);
+  if(phase==='input') placeChips();
 
   // 4) touchBtn lerp
   btnCurX+=(btnTargetX-btnCurX)*0.10;
@@ -1130,7 +1148,7 @@ function sizeBootCanvas(){
   bootCv.height=bootCv.offsetHeight||window.innerHeight;
 }
 sizeBootCanvas();
-window.addEventListener('resize',sizeBootCanvas);
+window.addEventListener('resize',()=>{sizeBootCanvas();positionBootUi();});
 
 function drawBootFrame(progress){
   const W=bootCv.width, H=bootCv.height;
@@ -1142,13 +1160,10 @@ function drawBootFrame(progress){
   const PAD=clamp(20,H*0.04,40);
   const GAP=clamp(20,H*0.03,36);
   const size=500;
-  const titleH=titleWrap.clientHeight||50;
-  const totalH=titleH+GAP+size;
-  const sy=Math.max(PAD,(H-totalH)/2);
-  const orbTop=sy+titleH+GAP;
 
+  // ── 오브 중심 = 화면 정중앙 ──
   const cx=W/2;
-  const cy=orbTop+size/2;
+  const cy=H/2;
   const R=size*0.38;
   const t=bootT;
 
@@ -1244,22 +1259,12 @@ function drawBootFrame(progress){
 /* 부트 시퀀스 단계 */
 // Boot UI OKO 텍스트를 오브 중앙에 정확히 위치
 function positionBootUi(){
-  const W=window.innerWidth;
-  const H=window.innerHeight;
-  const PAD=clamp(20,H*0.04,40);
-  const GAP=clamp(20,H*0.03,36);
-  const size=500;
-  const titleH=titleWrap.clientHeight||50;
-  const totalH=titleH+GAP+size;
-  const sy=Math.max(PAD,(H-totalH)/2);
-  const orbTop=sy+titleH+GAP;
-  const orbCy=orbTop+size/2; // 오브 정중앙 y
-  const orbCx=W/2;           // 오브 정중앙 x
-
+  // 오브는 항상 화면 정중앙 — layout()과 동일
+  const W=window.innerWidth, H=window.innerHeight;
   const logo=document.getElementById('bootLogoReal').parentElement;
   logo.style.position='absolute';
-  logo.style.left=orbCx+'px';
-  logo.style.top=orbCy+'px';
+  logo.style.left=(W/2)+'px';
+  logo.style.top=(H/2)+'px';
   logo.style.transform='translate(-50%, -50%)';
   logo.style.margin='0';
   logo.style.padding='0';
@@ -1304,6 +1309,7 @@ let bootAnimFrame;
 function bootLoop(){
   if(!bootRunning)return;
   sizeBootCanvas();
+  positionBootUi();
   const prog=Math.min(bootProgress/100,1);
   drawBootFrame(prog);
   bootAnimFrame=requestAnimationFrame(bootLoop);
@@ -1337,7 +1343,7 @@ function startParticles(){
   window.addEventListener('resize', resize);
 
   const ctx=cv.getContext('2d');
-  const COUNT=28;
+  const COUNT=55;
   const particles=Array.from({length:COUNT},(_,i)=>({
     x: Math.random()*cv.width,
     y: Math.random()*cv.height,
@@ -1347,27 +1353,24 @@ function startParticles(){
     vy: (Math.random()-0.5)*0.18,
     pulse: Math.random()*Math.PI*2,
     pulseSpeed: 0.012+Math.random()*0.018,
-    orbitR: Math.random()*80+30,
+    orbitR: Math.random()*120+60,
     orbitSpeed: (Math.random()-0.5)*0.004,
     orbitAngle: Math.random()*Math.PI*2,
-    baseX:0, baseY:0,
   }));
 
-  // 오브 중심 기준으로 궤도 파티클 절반 설정
+  // 오브 중심: getBoundingClientRect 기준
   function getOrbCenter(){
-    const ow=orbWrap;
-    const top=parseFloat(ow.style.top||0);
-    const size=orbCv.width||200;
-    return { x: app.clientWidth/2, y: top + size/2 };
+    const r=orbWrap.getBoundingClientRect();
+    return { x: r.left+r.width/2, y: r.top+r.height/2 };
   }
 
+  // 파티클 절반만 오브 주변 궤도, 나머지는 화면 전체 유영
   particles.forEach((p,i)=>{
-    if(i < COUNT*0.6){
-      const c=getOrbCenter();
-      p.baseX=c.x; p.baseY=c.y;
-      p.isOrbit=true;
-    } else {
-      p.isOrbit=false;
+    p.isOrbit = (i < COUNT*0.4);  // 40%만 오브 근처
+    if(!p.isOrbit){
+      // 화면 전체에 랜덤 배치
+      p.x=Math.random()*cv.width;
+      p.y=Math.random()*cv.height;
     }
   });
 
@@ -1382,7 +1385,7 @@ function startParticles(){
       if(p.isOrbit){
         p.orbitAngle+=p.orbitSpeed;
         p.x=c.x+Math.cos(p.orbitAngle)*p.orbitR;
-        p.y=c.y+Math.sin(p.orbitAngle)*p.orbitR*0.35; // 납작한 타원
+        p.y=c.y+Math.sin(p.orbitAngle)*p.orbitR*0.45;
       } else {
         p.x+=p.vx; p.y+=p.vy;
         if(p.x<0) p.x=cv.width;
@@ -1514,8 +1517,11 @@ function runIntro(){
 }
 
 /* ─── TOUCH LABEL ──────────────────────── */
-function startLabelRotation(){}
-function stopLabelRotation(){}
+function startLabelRotation(){ /* 로테이션 비활성화 — 고정 텍스트 유지 */ }
+function stopLabelRotation(){
+  const el=document.getElementById('touchLabel');
+  if(el){ el.innerHTML='준비됐습니다.<br>클릭해 주십시오.'; el.style.opacity=''; }
+}
 
 /* ─── 시계 & 시스템 바 ─────────────────────────── */
 function updateClock(){
@@ -1561,13 +1567,16 @@ document.getElementById('touchBtn').addEventListener('click',()=>{
 // chip 클릭 — 단일 선택 + input 포커스 + sel 클래스 정리
 document.querySelectorAll('.chip').forEach(chip=>{
   chip.addEventListener('click',()=>{
+    setOrbColor('orange');
     const wasSelected=chip.classList.contains('sel');
     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
     if(!wasSelected){
       chip.classList.add('sel');
       document.getElementById('pInput').value=chip.textContent.replace('▸ ','').trim();
+      document.getElementById('genBtn').classList.add('active-state');
     } else {
       document.getElementById('pInput').value='';
+      document.getElementById('genBtn').classList.remove('active-state');
     }
     // chip 선택 후 input 포커스
     document.getElementById('pInput').focus();
@@ -1579,13 +1588,9 @@ const pInput=document.getElementById('pInput');
 const statusL=document.querySelector('.input-status-l');
 const statusR=document.querySelector('.input-status-r');
 
-// textarea auto-resize
-function autoResize(){
-  pInput.style.height='auto';
-  pInput.style.height=Math.min(pInput.scrollHeight,120)+'px';
-}
 pInput.addEventListener('input',()=>{
-  autoResize();
+  // 타이핑 시작 → 빨강이면 포커스 색(yellow)으로 복귀
+  if(orbColorState==='red') setOrbColor('yellow');
   // 직접 타이핑 시 chip sel 해제
   const val=pInput.value.trim();
   const matchedChip=[...document.querySelectorAll('.chip')].find(c=>
@@ -1594,21 +1599,31 @@ pInput.addEventListener('input',()=>{
   document.querySelectorAll('.chip').forEach(c=>{
     if(c!==matchedChip) c.classList.remove('sel');
   });
+  // 버튼 active-state 토글
+  const btn=document.getElementById('genBtn');
+  if(val) btn.classList.add('active-state');
+  else btn.classList.remove('active-state');
 });
 
 pInput.addEventListener('focus',()=>{
+  if(orbColorState!=='red') setOrbColor('yellow');
   if(statusL){statusL.textContent='SYS::ACTIVE';statusL.classList.add('active');}
-  if(statusR){statusR.style.color='rgba(224,125,8,0.80)';}
+  if(statusR){statusR.style.color='rgba(247,224,95,0.80)';}
 });
 pInput.addEventListener('blur',()=>{
+  if(orbColorState!=='red') setOrbColor('orange');
   if(statusL){statusL.textContent='SYS::READY';statusL.classList.remove('active');}
   if(statusR){statusR.style.color='';}
+});
+pInput.addEventListener('keydown',(e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); document.getElementById('genBtn').click(); }
 });
 
 // genBtn — 입력 없으면 shake + error 표시
 /* ═══════════════════════════════════════════════
    AGENT ROUTING — Claude API 의도 분석
 ═══════════════════════════════════════════════ */
+// S3 오버레이 — 라우팅 중 상태
 const AGENTS = [
   {
     id: 'banner',
@@ -1669,18 +1684,14 @@ const AGENTS = [
 ];
 
 async function routeByAI(inputText) {
-  // 1차: 키워드 직접 매칭 (빠르고 정확)
   for (const agent of AGENTS) {
     if (agent.keywords.some(kw => inputText.includes(kw))) {
       return agent;
     }
   }
-
-  // 2차: 키워드 미매칭 시 AI 라우팅
   const agentList = AGENTS.map(a =>
     `- ${a.id}: ${a.desc} (키워드: ${a.keywords.join(', ')})`
   ).join('\n');
-
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1717,7 +1728,19 @@ ${agentList}
   }
 }
 
-// S3 오버레이 — 라우팅 중 상태
+function showOverlay(id, cb) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('on');
+  requestAnimationFrame(() => { el.classList.add('fade'); if(cb) cb(); });
+}
+function hideOverlay() {
+  document.querySelectorAll('.overlay.on').forEach(s => {
+    s.style.opacity = '0';
+    setTimeout(() => s.classList.remove('on','fade'), 320);
+  });
+}
+
 function showRoutingOverlay(text) {
   const s3 = document.getElementById('s3');
   const tag = s3.querySelector('.s3-tag');
@@ -1738,7 +1761,6 @@ function showRoutingOverlay(text) {
 
   showOverlay('s3', null);
 
-  // 프로그레스 바 애니메이션
   let p = 0;
   const interval = setInterval(() => {
     p = Math.min(p + (Math.random() * 8 + 3), 88);
@@ -1766,51 +1788,53 @@ function showRoutingResult(agent) {
 }
 
 document.getElementById('genBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('genBtn');
+  if(btn.dataset.routing === '1') return;
+
   const val = document.getElementById('pInput').value.trim();
   if (!val) {
-    const iw = document.getElementById('inputWrap');
-    const fr = document.querySelector('.input-frame');
-    iw.classList.remove('shake'); fr.classList.remove('error');
-    void iw.offsetWidth;
-    iw.classList.add('shake'); fr.classList.add('error');
-    setTimeout(() => fr.classList.remove('error'), 600);
-    document.getElementById('pInput').focus();
+    triggerOrbError();
     return;
   }
+
+  btn.dataset.routing = '1';
+  btn.style.opacity = '0.4';
+  btn.style.pointerEvents = 'none';
 
   document.getElementById('inputWrap').classList.remove('on');
   document.getElementById('genBtn').classList.remove('on');
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel','show'));
 
-  // 라우팅 오버레이 표시
   const interval = showRoutingOverlay(val);
 
   try {
     const agent = await routeByAI(val);
     clearInterval(interval);
     showRoutingResult(agent);
-
-    // 1.2초 후 이동
-    setTimeout(() => {
-      window.location.href = agent.url;
-    }, 1200);
-
+    setTimeout(() => { window.location.href = agent.url; }, 1200);
   } catch(e) {
     clearInterval(interval);
     console.error('라우팅 오류:', e);
-    // 오류 시 기본 일러스트 에이전트로
-    showRoutingResult(AGENTS[2]);
-    setTimeout(() => { window.location.href = AGENTS[2].url; }, 1200);
+    hideOverlay();
+    const s3 = document.getElementById('s3');
+    const tag = s3.querySelector('.s3-tag');
+    const title = s3.querySelector('.s3-title');
+    const status = document.getElementById('s3Status');
+    const fill = document.getElementById('s3Fill');
+    if(tag) tag.textContent = 'ROUTING ERROR';
+    if(title) title.innerHTML = '연결에 문제가 발생했습니다.<br><b>잠시 후 다시 시도</b>해주세요';
+    if(status) status.textContent = 'ERROR · PLEASE TRY AGAIN · · ·';
+    if(fill) fill.style.background = 'rgba(255,80,60,0.7)';
+    showOverlay('s3', null);
+    setTimeout(() => {
+      hideOverlay();
+      document.getElementById('inputWrap').classList.add('on');
+      document.getElementById('genBtn').classList.add('on');
+      btn.dataset.routing = '';
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+    }, 3000);
   }
-});
-
-// genBtn hover
-const genBtnEl=document.getElementById('genBtn');
-genBtnEl.addEventListener('mouseenter',()=>{
-  genBtnEl.querySelector('.btn-text').textContent='ANALYZE ▶▶';
-});
-genBtnEl.addEventListener('mouseleave',()=>{
-  genBtnEl.querySelector('.btn-text').textContent='GENERATE IMAGE';
 });
 
 document.getElementById('resetBtn').addEventListener('click',()=>{
@@ -1819,6 +1843,9 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   document.getElementById('pInput').value='';resetChips();
   document.getElementById('inputWrap').classList.remove('on');
   document.getElementById('genBtn').classList.remove('on');
+  document.getElementById('genBtn').classList.remove('active-state');
+  const _btn=document.getElementById('genBtn');
+  _btn.dataset.routing='';_btn.style.opacity='';_btn.style.pointerEvents='';
   ['tl0','tl1','m0','m1','m2'].forEach(id=>document.getElementById(id).classList.remove('on'));
   document.getElementById('touchBtn').classList.remove('on');
   titleShown=false;
