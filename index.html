@@ -1677,7 +1677,7 @@ const AGENTS = [
   {
     id: 'font',
     name: '폰트 다운로드',
-    keywords: ['폰트','글꼴','서체','oklight','폰트다운'],
+    keywords: ['폰트','글꼴','서체','oklight','폰트다운', '글씨체', '글씨'],
     url: '/imagesAI/download/font',
     desc: 'OK저축은행 폰트 파일 다운로드 요청',
   },
@@ -1692,7 +1692,7 @@ async function routeByAI(inputText) {
   const agentList = AGENTS.map(a =>
     `- ${a.id}: ${a.desc} (키워드: ${a.keywords.join(', ')})`
   ).join('\n');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('https://oko-proxy.okgroup0425.workers.dev', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -1709,7 +1709,7 @@ ${agentList}
 - 현수막, 배너현수막, 행사 대형 인쇄물 → banner
 - 명함, 비즈니스카드 → bizcard
 - 일러스트, 그림, 이미지 생성 → illust
-- 캐릭터, 마스코트, 이모티콘 → character
+- 캐릭터, 마스코트, 이모티콘, 읏맨 → character
 - 웹 팝업창, 모달 → popup
 - 웹 배너, 광고 배너 → webbanner
 - 로고 파일 다운로드 → logo
