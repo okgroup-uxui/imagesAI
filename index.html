@@ -545,6 +545,52 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
   font-style:normal;
   font-display:swap;
 }
+
+/* ══════════════════════════════════════════════
+   LOGO DOWNLOAD — 레이저 빔 + 토스트
+══════════════════════════════════════════════ */
+
+/* 토스트 */
+#dlToast {
+  position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%) translateY(16px);
+  z-index: 999; pointer-events: none; opacity: 0;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 28px; border-radius: 4px;
+  background: rgba(6,7,13,0.96);
+  border: 1px solid rgba(224,125,8,0.55);
+  box-shadow: 0 0 28px rgba(224,125,8,0.18);
+  white-space: nowrap;
+}
+#dlToast.on {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
+.dl-toast-icon {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(224,125,8,0.15);
+  border: 1px solid rgba(224,125,8,0.55);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.dl-toast-text {
+  font-family: 'OKLight', 'Noto Sans KR', sans-serif;
+  font-size: 13px; font-weight: 300; letter-spacing: 0.06em;
+  color: rgba(255,220,160,0.90);
+}
+.dl-toast-file {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; letter-spacing: 0.18em;
+  color: var(--ok2); margin-top: 2px;
+}
+
+/* 레이저 빔 오버레이 */
+#laserOverlay {
+  position: fixed; inset: 0; z-index: 990;
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.2s ease;
+}
+#laserOverlay.on { opacity: 1; }
+#laserCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 </style>
 </head>
 <body>
@@ -659,6 +705,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
   </div><!-- /mainWrap -->
 
   <button class="s4-restart" id="resetBtn" style="display:none">↩ RESTART SEQUENCE</button>
+  <!-- 다운로드 토스트 -->
+  <div id="dlToast">
+    <div class="dl-toast-icon">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M5 1V7M5 7L2.5 4.5M5 7L7.5 4.5" stroke="#e07d08" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M1 9H9" stroke="#e07d08" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="dl-toast-text">다운로드가 시작되었습니다</div>
+      <div class="dl-toast-file" id="dlToastFile"></div>
+    </div>
+  </div>
+
+  <!-- 레이저 빔 캔버스 -->
+  <div id="laserOverlay"><canvas id="laserCanvas"></canvas></div>
+
 </div><!-- /app -->
 
 <script>
@@ -1620,6 +1683,89 @@ pInput.addEventListener('keydown',(e)=>{
 });
 
 // genBtn — 입력 없으면 shake + error 표시
+
+/* ══════════════════════════════════════════════
+   LASER BEAM + TOAST — 다운로드 피드백
+══════════════════════════════════════════════ */
+function showDownloadFeedback(filename) {
+  // 토스트
+  const toast = document.getElementById('dlToast');
+  document.getElementById('dlToastFile').textContent = filename.toUpperCase();
+  toast.classList.add('on');
+  setTimeout(() => toast.classList.remove('on'), 3000);
+
+  // 레이저 빔
+  fireLaser();
+}
+
+function fireLaser() {
+  const overlay = document.getElementById('laserOverlay');
+  const canvas  = document.getElementById('laserCanvas');
+  const ctx     = canvas.getContext('2d');
+
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  overlay.classList.add('on');
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const beams = Array.from({ length: 12 }, (_, i) => ({
+    angle: (i / 12) * Math.PI * 2,
+    length: 0,
+    maxLen: Math.max(canvas.width, canvas.height) * 0.85,
+    width: Math.random() * 1.5 + 0.5,
+    speed: Math.random() * 18 + 14,
+    hue: 30 + Math.random() * 20,
+  }));
+
+  let frame = 0;
+  const maxFrames = 38;
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+    const progress = frame / maxFrames;
+
+    beams.forEach(b => {
+      b.length = Math.min(b.length + b.speed, b.maxLen);
+      const ex = cx + Math.cos(b.angle) * b.length;
+      const ey = cy + Math.sin(b.angle) * b.length;
+      const alpha = progress < 0.6
+        ? progress / 0.6
+        : 1 - (progress - 0.6) / 0.4;
+
+      const grad = ctx.createLinearGradient(cx, cy, ex, ey);
+      grad.addColorStop(0, `hsla(${b.hue}, 100%, 65%, ${alpha * 0.9})`);
+      grad.addColorStop(0.4, `hsla(${b.hue + 10}, 95%, 55%, ${alpha * 0.6})`);
+      grad.addColorStop(1, `hsla(${b.hue}, 90%, 45%, 0)`);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(ex, ey);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = b.width * (1 - progress * 0.5);
+      ctx.stroke();
+    });
+
+    // 중심 글로우
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 40 * (1 - progress));
+    glow.addColorStop(0, `rgba(245,170,32,${0.5 * (1 - progress)})`);
+    glow.addColorStop(1, 'rgba(245,170,32,0)');
+    ctx.beginPath();
+    ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
+
+    if (frame < maxFrames) {
+      requestAnimationFrame(draw);
+    } else {
+      overlay.classList.remove('on');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  requestAnimationFrame(draw);
+}
+
 /* ═══════════════════════════════════════════════
    LOGO DOWNLOAD — 계열사별 ZIP 직접 다운로드
 ═══════════════════════════════════════════════ */
@@ -1628,7 +1774,7 @@ const LOGO_MAP = [
   { names: ['ok저축은행','저축은행','okbank'],            file: 'okbank_ai.zip',            label: 'OK저축은행' },
   { names: ['ok캐피탈','캐피탈','okcapital'],            file: 'okcapital_ai.zip',         label: 'OK캐피탈' },
   { names: ['ok홀딩스','홀딩스','okholdings'],           file: 'okholdings_ai.zip',        label: 'OK홀딩스' },
-  { names: ['ok에이엑스','에이엑스','okax','okds'],       file: 'okax_ai.zip',              label: 'OK에이엑스' },
+  { names: ['ok에이엑스','에이엑스','okax','okds'],       file: 'okds_ai.zip',              label: 'OK에이엑스' },
   { names: ['아프로신용정보','신용정보','okci'],           file: 'okci_ai.zip',              label: '아프로신용정보' },
   { names: ['아프로에프앤아이','에프앤아이','okfni'],      file: 'okfni_ai.zip',             label: '아프로에프앤아이대부' },
   { names: ['ok넥스트','넥스트','oknext'],               file: 'oknext_ai.zip',            label: 'OK넥스트' },
@@ -1697,10 +1843,12 @@ function triggerLogoDownload(inputText, agent) {
     a.click();
     document.body.removeChild(a);
 
+    showDownloadFeedback(matched.file);
+
     setTimeout(() => {
       hideOverlay();
       document.getElementById('resetBtn').click();
-    }, 1800);
+    }, 2200);
   }, 600);
 }
 
@@ -1720,42 +1868,42 @@ const AGENTS = [
     id: 'bizcard',
     name: '명함 에이전트',
     keywords: ['명함','비즈니스카드','카드명함','직함'],
-    url: '/imagesAI/agent/bizcard.html',
+    url: '/imagesAI/agent/bizcard',
     desc: '명함 디자인 요청',
   },
   {
     id: 'illust',
     name: '일러스트 에이전트',
     keywords: ['일러스트','그림','이미지','아이콘'],
-    url: '/imagesAI/agent/illust.html',
+    url: '/imagesAI/agent/illust',
     desc: '일러스트, 이미지, 아이콘 생성 요청',
   },
   {
     id: 'character',
     name: '캐릭터 에이전트',
     keywords: ['캐릭터','마스코트','캐릭','이모티콘'],
-    url: '/imagesAI/agent/character.html',
+    url: '/imagesAI/agent/character',
     desc: '캐릭터, 마스코트 디자인 요청',
   },
   {
     id: 'popup',
     name: '팝업 에이전트',
     keywords: ['팝업','팝업창','팝업배너','모달'],
-    url: '/imagesAI/agent/popup.html',
+    url: '/imagesAI/agent/popup',
     desc: '팝업, 팝업창 디자인 요청',
   },
   {
     id: 'webbanner',
     name: '배너 에이전트',
     keywords: ['배너','웹배너','광고배너','디지털배너'],
-    url: '/imagesAI/agent/webbanner.html',
+    url: '/imagesAI/agent/webbanner',
     desc: '웹 배너, 광고 배너 디자인 요청',
   },
   {
     id: 'logo',
     name: '로고 다운로드',
     keywords: ['로고','로고다운','로고파일','ok로고','로고 주세요','브랜드로고'],
-    url: '/imagesAI/logo/',
+    url: '/imagesAI/download/logo/',
     type: 'logo_download',
     desc: 'OK금융그룹 계열사 로고 파일 다운로드 요청 (OK저축은행, OK캐피탈, OK홀딩스, OK에이엑스, 아프로신용정보, 아프로에프앤아이대부, OK넥스트, OK인베스트먼트파트너스, OK네트웍스, OKBANK인도네시아, OK비교대출, OKPay, OK배정장학재단, 읏맨프로배구단, 읏맨럭비단)',
   },
