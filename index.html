@@ -1795,6 +1795,9 @@ pInput.addEventListener('keydown',(e)=>{
    SCENARIO AI — 이미지 생성
 ══════════════════════════════════════════════ */
 const SCENARIO_PROXY    = 'https://oko-proxy.okgroup0425.workers.dev';
+const SCENARIO_KEY      = 'api_VGZhqcWHfxqD7UzzWWfBXQgw';
+const SCENARIO_AUTH     = 'Basic ' + btoa(SCENARIO_KEY + ':');
+const SCENARIO_BASE     = 'https://api.scenario.com/v1';
 const MODEL_ILLUST      = 'model_CPxGWWCNz5TRs2cPbdQGoz2a';
 const MODEL_UTMAN       = '';  // TODO: 읏맨 모델 ID 입력
 
@@ -1876,11 +1879,14 @@ async function generateScenario(promptText, modelId, agentType) {
   try {
     setS4Progress(12, 'REQUESTING', '');
 
-    const res = await fetch(`${SCENARIO_PROXY}/scenario/inferences`, {
+    const res = await fetch(`${SCENARIO_BASE}/models/${modelId}/inferences`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': SCENARIO_AUTH,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: JSON.stringify({
-        modelId,
         parameters: {
           prompt: promptText,
           negativePrompt: 'blurry, low quality, watermark, text, ugly',
@@ -1930,7 +1936,8 @@ async function pollScenario(modelId, inferenceId) {
 
       try {
         const res = await fetch(
-          `${SCENARIO_PROXY}/scenario/poll?modelId=${modelId}&inferenceId=${inferenceId}`
+          `${SCENARIO_BASE}/models/${modelId}/inferences/${inferenceId}`,
+          { headers: { 'Authorization': SCENARIO_AUTH, 'Accept': 'application/json' } }
         );
         if (!res.ok) throw new Error(`폴링 실패 (${res.status})`);
 
