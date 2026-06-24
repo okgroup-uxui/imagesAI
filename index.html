@@ -1795,9 +1795,9 @@ pInput.addEventListener('keydown',(e)=>{
    SCENARIO AI — 이미지 생성
 ══════════════════════════════════════════════ */
 const SCENARIO_PROXY    = 'https://oko-proxy.okgroup0425.workers.dev';
-const SCENARIO_KEY      = 'api_VGZhqcWHfxqD7UzzWWfBXQgw';
-const SCENARIO_AUTH     = 'Basic ' + btoa(SCENARIO_KEY + ':');
-const SCENARIO_BASE     = 'https://api.scenario.com/v1';
+const SCENARIO_AUTH     = 'Basic YXBpX3ZvckRQcGh6eXMzeExIZFhVYjd2Vk05NzpmcDdlcnNZd2hRTFZRdHpya1lhMW1SR3k=';
+const SCENARIO_BASE     = 'https://api.cloud.scenario.com/v1';
+const SCENARIO_MODEL_ID = 'model_CPxGWWCNz5TRs2cPbdQGoz2a';
 const MODEL_ILLUST      = 'model_CPxGWWCNz5TRs2cPbdQGoz2a';
 const MODEL_UTMAN       = '';  // TODO: 읏맨 모델 ID 입력
 
@@ -1879,7 +1879,7 @@ async function generateScenario(promptText, modelId, agentType) {
   try {
     setS4Progress(12, 'REQUESTING', '');
 
-    const res = await fetch(`${SCENARIO_BASE}/models/${modelId}/inferences`, {
+    const res = await fetch(`${SCENARIO_BASE}/generate/custom/model_bfl-flux-1-dev`, {
       method: 'POST',
       headers: {
         'Authorization': SCENARIO_AUTH,
@@ -1887,17 +1887,15 @@ async function generateScenario(promptText, modelId, agentType) {
         'Accept': 'application/json',
       },
       body: JSON.stringify({
-        parameters: {
-          prompt: promptText,
-          negativePrompt: 'blurry, low quality, watermark, text, ugly',
-          numSamples: 2,
-          width: 512,
-          height: 512,
-          scheduler: 'EulerDiscreteScheduler',
-          numInferenceSteps: 30,
-          guidance: 7,
-          type: 'txt2img',
-        }
+        modelId: modelId,
+        loras: [modelId],
+        lorasScale: [0.75],
+        prompt: promptText,
+        numOutputs: 2,
+        numInferenceSteps: 28,
+        width: 1024,
+        height: 1024,
+        guidance: 3.5,
       })
     });
 
@@ -1908,11 +1906,12 @@ async function generateScenario(promptText, modelId, agentType) {
     if (!res.ok) {
       throw new Error(data.message || data.error || data._debug?.body || `API 오류 (${res.status})`);
     }
-    const inferenceId = data.inference?.id;
-    if (!inferenceId) throw new Error('inference ID를 받지 못했습니다');
+    const jobId = data.job?.jobId || data.jobId;
+    if (!jobId) throw new Error('Job ID를 받지 못했습니다: ' + JSON.stringify(data));
+    console.log('[Scenario] jobId:', jobId);
 
     setS4Progress(25, 'RENDERING', '');
-    await pollScenario(modelId, inferenceId);
+    await pollScenario(modelId, jobId);
 
   } catch (err) {
     console.error(err);
@@ -1924,7 +1923,7 @@ async function generateScenario(promptText, modelId, agentType) {
 }
 
 // 폴링
-async function pollScenario(modelId, inferenceId) {
+async function pollScenario(modelId, jobId) {
   let attempts = 0;
   const max = 60;
 
@@ -1936,18 +1935,22 @@ async function pollScenario(modelId, inferenceId) {
 
       try {
         const res = await fetch(
-          `${SCENARIO_BASE}/models/${modelId}/inferences/${inferenceId}`,
+          `${SCENARIO_BASE}/jobs/${jobId}`,
           { headers: { 'Authorization': SCENARIO_AUTH, 'Accept': 'application/json' } }
         );
         if (!res.ok) throw new Error(`폴링 실패 (${res.status})`);
 
         const data = await res.json();
-        const status = data.inference?.status;
+        const status = data.job?.status || data.status;
+        console.log('[Scenario] poll status:', status, data);
 
-        if (status === 'succeeded') {
+        if (status === 'success') {
           clearInterval(s4PollTimer); s4PollTimer = null;
-          const images = data.inference?.images || [];
-          if (!images.length) { reject(new Error('생성된 이미지가 없습니다')); return; }
+          const assetIds = data.job?.metadata?.assetIds || [];
+          if (!assetIds.length) { reject(new Error('생성된 이미지가 없습니다')); return; }
+          // assetId → URL 변환 후 렌더링
+          setS4Progress(95, 'FETCHING ASSETS', '');
+          const images = await fetchAssetUrls(assetIds);
           setS4Progress(100, 'COMPLETE', '');
           document.getElementById('s4Tag').textContent = 'OKO · COMPLETE';
           document.getElementById('s4Title').innerHTML = `<b>${images.length}개</b> 이미지가 생성되었습니다`;
@@ -1955,7 +1958,7 @@ async function pollScenario(modelId, inferenceId) {
           renderS4Images(images);
           resolve(images);
 
-        } else if (status === 'failed') {
+        } else if (status === 'failed' || status === 'error') {
           clearInterval(s4PollTimer); s4PollTimer = null;
           reject(new Error('이미지 생성에 실패했습니다'));
 
@@ -1974,6 +1977,25 @@ async function pollScenario(modelId, inferenceId) {
     showS4Error('⚠ ' + err.message);
     document.getElementById('s4ImgGrid').innerHTML = '';
   });
+}
+
+// asset ID → URL 변환
+async function fetchAssetUrls(assetIds) {
+  const results = [];
+  for (const assetId of assetIds) {
+    try {
+      const res = await fetch(`${SCENARIO_BASE}/assets/${assetId}`, {
+        headers: { 'Authorization': SCENARIO_AUTH, 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      console.log('[Scenario] asset:', assetId, data);
+      const url = data.asset?.url || data.url;
+      if (url) results.push({ url, id: assetId });
+    } catch(e) {
+      console.warn('[Scenario] asset fetch failed:', assetId, e);
+    }
+  }
+  return results;
 }
 
 // 이미지 렌더링
