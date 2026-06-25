@@ -783,26 +783,35 @@ const ringPalette={
     {hue:2,  sat:91, lit:54},
     {hue:358,sat:90, lit:56},
   ],
+  // 칩별 색상
+  chip_kw0: rings.map(()=>({hue:200, sat:88, lit:58})), // 명함 — 스틸 블루
+  chip_kw1: rings.map(()=>({hue:280, sat:85, lit:62})), // 읏맨 — 퍼플
+  chip_kw2: rings.map(()=>({hue:155, sat:80, lit:50})), // 일러스트 — 에메랄드
+  chip_kw3: rings.map(()=>({hue:22,  sat:92, lit:56})), // 로고 — 오리지널 오렌지
+  chip_kw4: rings.map(()=>({hue:170, sat:75, lit:48})), // 폰트 — 틸
+  chip_kw5: rings.map(()=>({hue:330, sat:82, lit:58})), // 배너 — 핑크
+  chip_kw6: rings.map(()=>({hue:48,  sat:96, lit:54})), // 현수막 — 골드
 };
 
 let orbColorState='orange'; // 현재 목표 색상
 let orbColorRaf=null;
 
 function setOrbColor(target){
-  // red 상태에서는 orange/yellow로 덮어쓸 수 있음
-  // 단, 이미 같은 상태면 스킵
   if(orbColorState===target) return;
   orbColorState=target;
+  // 현재 rings 값을 정확히 스냅 (이전 애니 중간값 포함)
   const from=rings.map(r=>({hue:r.hue,sat:r.sat,lit:r.lit}));
-  const to=ringPalette[target];
-  let p=0;
+  const to=ringPalette[target] || ringPalette.orange;
   if(orbColorRaf){ cancelAnimationFrame(orbColorRaf); orbColorRaf=null; }
-  function step(){
-    p=Math.min(p+0.055, 1);
+  const DURATION=380; // ms
+  const startTime=performance.now();
+  function step(now){
+    const p=Math.min((now-startTime)/DURATION, 1);
+    const ease=1-Math.pow(1-p,3); // ease-out cubic
     rings.forEach((r,i)=>{
-      r.hue=from[i].hue+(to[i].hue-from[i].hue)*p;
-      r.sat=from[i].sat+(to[i].sat-from[i].sat)*p;
-      r.lit=from[i].lit+(to[i].lit-from[i].lit)*p;
+      r.hue=from[i].hue+(to[i].hue-from[i].hue)*ease;
+      r.sat=from[i].sat+(to[i].sat-from[i].sat)*ease;
+      r.lit=from[i].lit+(to[i].lit-from[i].lit)*ease;
     });
     if(p<1) orbColorRaf=requestAnimationFrame(step);
     else orbColorRaf=null;
@@ -1647,7 +1656,8 @@ document.getElementById('touchBtn').addEventListener('click',()=>{
 // chip 클릭 — 단일 선택 + input 포커스 + sel 클래스 정리
 document.querySelectorAll('.chip').forEach(chip=>{
   chip.addEventListener('click',()=>{
-    setOrbColor('orange');
+    const paletteKey = 'chip_' + chip.id;
+    setOrbColor(ringPalette[paletteKey] ? paletteKey : 'orange');
     const wasSelected=chip.classList.contains('sel');
     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
     if(!wasSelected){
@@ -1657,6 +1667,7 @@ document.querySelectorAll('.chip').forEach(chip=>{
     } else {
       document.getElementById('pInput').value='';
       document.getElementById('genBtn').classList.remove('active-state');
+      setOrbColor('orange');
     }
     // chip 선택 후 input 포커스
     document.getElementById('pInput').focus();
@@ -1671,6 +1682,8 @@ const statusR=document.querySelector('.input-status-r');
 pInput.addEventListener('input',()=>{
   // 타이핑 시작 → 빨강이면 포커스 색(yellow)으로 복귀
   if(orbColorState==='red') setOrbColor('yellow');
+  // chip 선택 상태에서 직접 타이핑하면 chip 색 해제 → yellow
+  if(orbColorState.startsWith('chip_')) setOrbColor('yellow');
   // 직접 타이핑 시 chip sel 해제
   const val=pInput.value.trim();
   const matchedChip=[...document.querySelectorAll('.chip')].find(c=>
@@ -1686,12 +1699,12 @@ pInput.addEventListener('input',()=>{
 });
 
 pInput.addEventListener('focus',()=>{
-  if(orbColorState!=='red') setOrbColor('yellow');
+  if(orbColorState!=='red' && !orbColorState.startsWith('chip_')) setOrbColor('yellow');
   if(statusL){statusL.textContent='SYS::ACTIVE';statusL.classList.add('active');}
   if(statusR){statusR.style.color='rgba(247,224,95,0.80)';}
 });
 pInput.addEventListener('blur',()=>{
-  if(orbColorState!=='red') setOrbColor('orange');
+  if(orbColorState!=='red' && !orbColorState.startsWith('chip_')) setOrbColor('orange');
   if(statusL){statusL.textContent='SYS::READY';statusL.classList.remove('active');}
   if(statusR){statusR.style.color='';}
 });
