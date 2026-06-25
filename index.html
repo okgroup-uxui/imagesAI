@@ -1811,7 +1811,21 @@ document.getElementById('genBtn').addEventListener('click', async () => {
     const agent = await routeByAI(val);
     clearInterval(interval);
     showRoutingResult(agent);
-    setTimeout(() => { window.location.href = agent.url; }, 1200);
+    setTimeout(() => {
+      window.open(agent.url, '_blank');
+      hideOverlay();
+      document.getElementById('pInput').value=''; resetChips();
+      document.getElementById('genBtn').classList.remove('active-state');
+      const _btn=document.getElementById('genBtn');
+      _btn.dataset.routing=''; _btn.style.opacity=''; _btn.style.pointerEvents='';
+      stopLabelRotation();
+      phase='input'; inputMode=true;
+      document.getElementById('touchBtn').classList.remove('on');
+      layout();
+      document.getElementById('inputWrap').classList.add('on');
+      document.getElementById('genBtn').classList.add('on');
+      setTimeout(()=>{placeChips();setTimeout(animChips,80);},80);
+    }, 2200);
   } catch(e) {
     clearInterval(interval);
     console.error('라우팅 오류:', e);
