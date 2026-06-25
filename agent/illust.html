@@ -126,7 +126,7 @@ function findJobId(data) {
 async function pollJob(jobId) {
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 5000));
-    const res = await fetch('/api/generate', {
+    const res = await fetch('/imagesAI/agent/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jobId }),
@@ -155,7 +155,7 @@ async function generate() {
   document.getElementById('step2').style.display = 'none';
 
   try {
-    const res = await fetch('/api/generate', {
+    const res = await fetch('/imagesAI/agent/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt }),
