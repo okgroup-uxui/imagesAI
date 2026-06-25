@@ -511,6 +511,80 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 
 @keyframes cursor-blink{0%,100%{opacity:1;}50%{opacity:0;}}
 
+/* ── AGENT IFRAME PANEL ───────────────────────── */
+#agentPanel{
+  position:fixed;
+  left:0;top:0;
+  width:100%;height:100%;
+  z-index:900;
+  overflow:hidden;
+  background:#06070d;
+  display:none;
+  pointer-events:none;
+  transform:scale(0);
+  transform-origin:50% 50%;
+  border-radius:50%;
+  opacity:0;
+}
+#agentPanel.opening{
+  display:block;
+  pointer-events:none;
+  animation:panel-open 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+#agentPanel.open{
+  display:block;
+  pointer-events:auto;
+  transform:scale(1);
+  border-radius:0;
+  opacity:1;
+}
+@keyframes panel-open{
+  0%{
+    transform:scale(0);
+    border-radius:50%;
+    opacity:0.7;
+    box-shadow:0 0 60px 10px rgba(224,125,8,0.6);
+  }
+  40%{
+    border-radius:8px;
+    opacity:1;
+  }
+  100%{
+    transform:scale(1);
+    border-radius:0;
+    opacity:1;
+    box-shadow:none;
+  }
+}
+
+/* 닫기 버튼 */
+#agentClose{
+  position:fixed;
+  top:18px;right:18px;
+  z-index:950;
+  width:36px;height:36px;
+  border-radius:50%;
+  border:1px solid rgba(224,125,8,0.5);
+  background:rgba(6,7,13,0.85);
+  color:rgba(224,125,8,0.9);
+  font-size:18px;line-height:1;
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(224,125,8,0.2);
+  backdrop-filter:blur(6px);
+  transition:background 0.15s, box-shadow 0.15s;
+}
+#agentClose.on{display:flex;}
+#agentClose:hover{
+  background:rgba(224,125,8,0.15);
+  box-shadow:0 0 20px rgba(224,125,8,0.4);
+}
+
+#agentPanel iframe{
+  width:100%;height:100%;
+  border:none;display:block;
+}
+
 /* ── ORB ERROR SHAKE ──────────────────────────── */
 @keyframes orbShake{
   0%,100%{transform:translate(-50%,-50%) translateX(0);}
@@ -659,6 +733,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
   </div><!-- /mainWrap -->
 
   <button class="s4-restart" id="resetBtn" style="display:none">↩ RESTART SEQUENCE</button>
+
+  <!-- 에이전트 iframe 패널 -->
+  <div id="agentPanel">
+    <iframe id="agentFrame" src="" title="Agent"></iframe>
+  </div>
+  <button id="agentClose" title="닫기">✕</button>
 </div><!-- /app -->
 
 <script>
@@ -1787,6 +1867,57 @@ function showRoutingResult(agent) {
   if(status) status.textContent = `DESTINATION · ${agent.url.toUpperCase()} · · ·`;
 }
 
+/* ── AGENT IFRAME PANEL ───────────────────────────
+   오브 중심(0,0)에서 화면 전체(100,100)로 펼쳐지는 진입
+─────────────────────────────────────────────────── */
+function openAgentPanel(url) {
+  const panel  = document.getElementById('agentPanel');
+  const frame  = document.getElementById('agentFrame');
+  const btn    = document.getElementById('agentClose');
+
+  frame.src = url;
+  panel.classList.remove('open');
+  panel.classList.add('opening');
+
+  // 애니메이션(0.55s) 끝나면 open 상태 고정
+  setTimeout(() => {
+    panel.classList.remove('opening');
+    panel.classList.add('open');
+    btn.classList.add('on');
+  }, 560);
+}
+
+function closeAgentPanel() {
+  const panel = document.getElementById('agentPanel');
+  const frame = document.getElementById('agentFrame');
+  const btn   = document.getElementById('agentClose');
+
+  panel.style.transition = 'transform 0.35s cubic-bezier(0.7,0,0.84,0), border-radius 0.35s ease, opacity 0.35s ease';
+  panel.style.transform = 'scale(0)';
+  panel.style.borderRadius = '50%';
+  panel.style.opacity = '0';
+  btn.classList.remove('on');
+
+  setTimeout(() => {
+    panel.classList.remove('open','opening');
+    panel.style.cssText = '';
+    frame.src = '';
+  }, 380);
+}
+
+document.getElementById('agentClose').addEventListener('click', () => {
+  closeAgentPanel();
+  // 인풋 UI 복원
+  stopLabelRotation();
+  hideOverlay();
+  phase='input'; inputMode=true;
+  document.getElementById('touchBtn').classList.remove('on');
+  layout();
+  document.getElementById('inputWrap').classList.add('on');
+  document.getElementById('genBtn').classList.add('on');
+  setTimeout(()=>{placeChips();setTimeout(animChips,80);},80);
+});
+
 document.getElementById('genBtn').addEventListener('click', async () => {
   const btn = document.getElementById('genBtn');
   if(btn.dataset.routing === '1') return;
@@ -1810,22 +1941,15 @@ document.getElementById('genBtn').addEventListener('click', async () => {
   try {
     const agent = await routeByAI(val);
     clearInterval(interval);
-    showRoutingResult(agent);
-    setTimeout(() => {
-      window.open(agent.url, '_blank');
-      hideOverlay();
-      document.getElementById('pInput').value=''; resetChips();
-      document.getElementById('genBtn').classList.remove('active-state');
-      const _btn=document.getElementById('genBtn');
-      _btn.dataset.routing=''; _btn.style.opacity=''; _btn.style.pointerEvents='';
-      stopLabelRotation();
-      phase='input'; inputMode=true;
-      document.getElementById('touchBtn').classList.remove('on');
-      layout();
-      document.getElementById('inputWrap').classList.add('on');
-      document.getElementById('genBtn').classList.add('on');
-      setTimeout(()=>{placeChips();setTimeout(animChips,80);},80);
-    }, 2200);
+
+    // 분석 완료 즉시 → 오브에서 iframe 패널 펼치기
+    hideOverlay();
+    openAgentPanel(agent.url);
+    document.getElementById('pInput').value=''; resetChips();
+    document.getElementById('genBtn').classList.remove('active-state');
+    const _btn=document.getElementById('genBtn');
+    _btn.dataset.routing=''; _btn.style.opacity=''; _btn.style.pointerEvents='';
+    stopLabelRotation();
   } catch(e) {
     clearInterval(interval);
     console.error('라우팅 오류:', e);
