@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_레이어_2" data-name="레이어 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 255.12 141.73">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        letter-spacing: .09em;
+      }
+
+      .cls-3 {
+        letter-spacing: -.09em;
+      }
+
+      .cls-4 {
+        fill: #ff571f;
+        font-family: TTOKFontM, 'OK Font';
+        font-size: 8.5px;
+      }
+
+      .cls-5 {
+        letter-spacing: 0em;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1" data-name="Layer 1">
+    <rect class="cls-1" width="255.12" height="141.73"/>
+    <text class="cls-4" transform="translate(15.82 85.9)"><tspan class="cls-3" x="0" y="0">T</tspan><tspan class="cls-5" x="4.33" y="0">el</tspan><tspan class="cls-5"><tspan x="0" y="10.5" xml:space="preserve">Mobile        </tspan></tspan><tspan class="cls-5" x="0" y="21">E-mail </tspan><tspan class="cls-2" x="28.9" y="21"> </tspan></text>
+  </g>
+</svg>
