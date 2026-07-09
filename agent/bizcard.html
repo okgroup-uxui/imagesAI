@@ -633,6 +633,65 @@ function gv(id){var e=el(id);return e&&e.value?e.value:'';}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(m){var t=el('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast';},2500);}
 
+/* ── [버그 수정] 폰트를 base64로 직접 임베딩 ──────────────────────
+   기존 getFontCSS()는 @font-face의 src가 절대경로(/imagesAI/agent/fonts/...)를
+   그대로 유지한 채 내보냈다. 이 경로는 원본 페이지가 서비스되는 서버에서만
+   유효해서, 다운로드한 SVG를 로컬/다른 PC/다른 위치에서 열면 폰트를 못 찾아
+   기본 폴백 폰트로 바뀌어 보였다("폰트가 사라진다"는 증상의 원인).
+   → fetch()로 실제 폰트 바이너리를 읽어 data URI(base64)로 바꿔 심으면
+     SVG 파일 자체에 폰트가 포함되어 어디서 열어도 항상 동일하게 보인다. */
+var _fontDataCache={};
+function fontToDataURI(url){
+  if(_fontDataCache[url]) return _fontDataCache[url];
+  var p=fetch(url).then(function(res){
+    if(!res.ok) throw new Error('font fetch failed: '+url);
+    return res.arrayBuffer();
+  }).then(function(buf){
+    var bytes=new Uint8Array(buf),bin='';
+    for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+    return 'data:font/woff2;base64,'+btoa(bin);
+  }).catch(function(){ return null; });
+  _fontDataCache[url]=p;
+  return p;
+}
+async function embedFontCSS(withAliases){
+  var styles=document.querySelectorAll('style');
+  for(var i=0;i<styles.length;i++){
+    var txt=styles[i].textContent||'';
+    if(txt.indexOf('@font-face')<0) continue;
+    var blocks=[],pos=0;
+    while(true){
+      var s=txt.indexOf('@font-face{',pos);if(s<0)break;
+      var e=txt.indexOf("');}",s);if(e<0)break;
+      blocks.push(txt.slice(s,e+4));
+      pos=e+4;
+    }
+    if(!blocks.length) continue;
+    var result='',srcs={};
+    for(var bi=0;bi<blocks.length;bi++){
+      var block=blocks[bi];
+      var um=block.match(/src:url\('([^']+)'\)/);
+      var wm=block.match(/font-weight:(\d+)/);
+      if(um){
+        var dataUri=await fontToDataURI(um[1]);
+        if(dataUri){
+          block=block.split(um[1]).join(dataUri);
+          if(withAliases&&wm) srcs[wm[1]]=dataUri;
+        }
+      }
+      result+=block;
+    }
+    if(withAliases){
+      /* OTOKFontL/M = 배경 SVG CSS가 참조하는 폰트 이름 별칭 */
+      [['OTOKFontL','300'],['OTOKFontM','500']].forEach(function(a){
+        if(srcs[a[1]]) result+="@font-face{font-family:'"+a[0]+"';src:url('"+srcs[a[1]]+"') format('woff2');}";
+      });
+    }
+    return result;
+  }
+  return '';
+}
+
 /* ── OKFont @font-face CSS 추출 (다운로드 시 SVG/JPG에 폰트 임베딩용) ──
    withAliases=true면 배경 SVG의 CSS가 참조하는 OTOKFontL/M/B 별칭도 함께 생성한다.
    (downloadSVG/buildSVGForDownload/downloadJPG 3곳에서 중복 정의되어 있던 것을 통합) */
@@ -667,6 +726,7 @@ function getFontCSS(withAliases){
   }
   return '';
 }
+
 
 /* ── NAVIGATION ─────────────────── */
 function nav(page){
@@ -1378,22 +1438,25 @@ async function downloadSVG(face){
     if(logoNested) svg=svg.slice(0,logoS)+logoNested+svg.slice(logoE);
   }
 
-  /* ── STEP 4: 읏 아이콘 <image> → inline <g> ───────────────── */
-  if(S.type==='exec'&&face==='front'&&ICON_EUT_URI){
-    var eutSearch='<image href="'+ICON_EUT_URI+'"';
-    var eutS=svg.indexOf(eutSearch);
-    if(eutS>=0){
-      var eutE=svg.indexOf('/>',eutS)+2;
-      var eutTag=svg.slice(eutS,eutE);
-      var ex=parseFloat((eutTag.match(/\bx="([\d.]+)"/)  ||['','0'])[1]);
-      var ey=parseFloat((eutTag.match(/\by="([\d.]+)"/)  ||['','0'])[1]);
-      var ew=parseFloat((eutTag.match(/width="([\d.]+)"/) ||['','0'])[1]);
-      var escale=(ew/21.6).toFixed(4);
-      var eutInner=await svgToInner(ICON_EUT_URI,'eut',false);
-      if(eutInner){
-        svg=svg.slice(0,eutS)+
-          '<g id="eut-icon" transform="translate('+ex+','+ey+') scale('+escale+')">'+eutInner+'</g>'+
-          svg.slice(eutE);
+  /* ── STEP 4: 아이콘 <image> → inline <svg> (앞면 읏 아이콘 / 뒷면 OK 아이콘) ─────
+     [버그 수정] 기존에는 exec 앞면(읏 아이콘)만 인라인 처리했고 exec 뒷면(OK 아이콘)은
+     빠져 있었음. 뒷면 SVG를 파일로 저장해 다른 위치(원본 페이지가 아닌 곳)에서 열면
+     상대경로 './logo/icon-ok.svg'가 더 이상 유효하지 않아 아이콘이 보이지 않았음.
+     logo(STEP 3)와 동일하게 svgToNested()로 원본 viewBox를 유지해 인라인한다. */
+  if(S.type==='exec'){
+    var iconURI=(face==='front')?ICON_EUT_URI:ICON_OK_URI;
+    if(iconURI){
+      var iconSearch='<image href="'+iconURI+'"';
+      var iconS=svg.indexOf(iconSearch);
+      if(iconS>=0){
+        var iconE=svg.indexOf('/>',iconS)+2;
+        var iconTag=svg.slice(iconS,iconE);
+        var ix=parseFloat((iconTag.match(/\bx="([-\d.]+)"/)     ||['','0'])[1]);
+        var iy=parseFloat((iconTag.match(/\by="([-\d.]+)"/)     ||['','0'])[1]);
+        var iw=parseFloat((iconTag.match(/width="([\d.]+)"/)    ||['','0'])[1]);
+        var ih=parseFloat((iconTag.match(/height="([\d.]+)"/)   ||['','0'])[1]);
+        var iconNested=await svgToNested(iconURI,ix,iy,iw,ih,'icon');
+        if(iconNested) svg=svg.slice(0,iconS)+iconNested+svg.slice(iconE);
       }
     }
   }
@@ -1403,7 +1466,7 @@ async function downloadSVG(face){
     '<svg$1$2 width="'+physW+'mm" height="'+physH+'mm">');
 
   /* ── STEP 6: 루트 <svg> 바로 다음에 @font-face defs 주입 ───── */
-  var FONT_CSS=getFontCSS(true);
+  var FONT_CSS=await embedFontCSS(true);
   if(FONT_CSS){
     /* 루트 svg 태그 끝 위치 찾아서 그 뒤에 삽입 (bg-layer defs와 별개) */
     var svgTagEnd=svg.indexOf('>')+1;
@@ -1462,29 +1525,49 @@ function renderOverlayToCanvas(ctx, svgString, scale){
     var x=tr?tr[0]:num(el,'x',0);
     var y=tr?tr[1]:num(el,'y',0);
     var anchor=el.getAttribute('text-anchor')||'start';
-    ctx.textAlign=(anchor==='end')?'right':(anchor==='middle'?'center':'left');
     ctx.textBaseline='alphabetic';
     var ff=el.getAttribute('font-family')||FF;
     var fw=el.getAttribute('font-weight')||'400';
     var fs=num(el,'font-size',10)*k;
     var ls=el.getAttribute('letter-spacing');
-    if(supportsLetterSpacing) ctx.letterSpacing=(ls?(parseFloat(ls)*k):0)+'px';
+    var lsPx=ls?(parseFloat(ls)*k):0;
     ctx.fillStyle=el.getAttribute('fill')||'#000';
     var tspans=Array.prototype.filter.call(el.childNodes,function(n){return n.nodeType===1&&n.tagName.toLowerCase()==='tspan';});
     if(tspans.length){
       /* tspan은 start 정렬(왼쪽 정렬) 텍스트에서만 쓰이므로 순서대로 이어붙여 그린다 */
       var cx=x*k;
       ctx.textAlign='left';
+      if(supportsLetterSpacing) ctx.letterSpacing=lsPx+'px';
       tspans.forEach(function(tspan){
         var tfw=tspan.getAttribute('font-weight')||fw;
         ctx.font=tfw+' '+fs+'px '+ff;
         var txt=tspan.textContent;
         ctx.fillText(txt,cx,y*k);
-        cx+=ctx.measureText(txt).width;
+        cx+=ctx.measureText(txt).width+lsPx*txt.length;
       });
     } else {
       ctx.font=fw+' '+fs+'px '+ff;
-      ctx.fillText(el.textContent,x*k,y*k);
+      var txt=el.textContent;
+      if(lsPx && anchor!=='start'){
+        /* [버그 수정] canvas의 letterSpacing과 textAlign(right/center)을 함께 쓰면
+           브라우저가 "마지막 글자 뒤" 자간까지 폭 계산에 포함시켜, 오른쪽/가운데
+           정렬 기준점보다 텍스트가 안쪽으로 밀려 오른쪽에 빈 여백이 생겼다
+           (예: 임원용 명함 뒷면 영문 직함/부서 라인).
+           → trailing 자간을 뺀 실제 텍스트 폭을 직접 계산해서 textAlign='left'로
+             시작 x를 구해 그리면 기준점에 정확히 맞춰진다. */
+        var chars=txt.split('');
+        var plainWidth=0;
+        chars.forEach(function(c){plainWidth+=ctx.measureText(c).width;});
+        var totalWidth=plainWidth+lsPx*Math.max(chars.length-1,0);
+        var startX=(anchor==='end')?(x*k-totalWidth):(x*k-totalWidth/2);
+        ctx.textAlign='left';
+        if(supportsLetterSpacing) ctx.letterSpacing=lsPx+'px';
+        ctx.fillText(txt,startX,y*k);
+      } else {
+        ctx.textAlign=(anchor==='end')?'right':(anchor==='middle'?'center':'left');
+        if(supportsLetterSpacing) ctx.letterSpacing=lsPx+'px';
+        ctx.fillText(txt,x*k,y*k);
+      }
     }
     if(supportsLetterSpacing) ctx.letterSpacing='0px';
   }
