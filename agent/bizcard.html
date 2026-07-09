@@ -629,7 +629,13 @@ var FF="OKFont,'Apple SD Gothic Neo',sans-serif";
 var FG="'Apple Gothic','Apple SD Gothic Neo',Dotum,sans-serif";
 
 function el(id){return document.getElementById(id);}
-function gv(id){var e=el(id);return e&&e.value?e.value:'';}
+/* [버그 수정] 한글 자모 분리(NFD) 문제 — macOS 등 일부 환경의 한글 입력기(IME)를 거치면
+   <input>.value가 완성형(NFC)이 아니라 자모가 분리된 상태(NFD)로 저장되는 경우가 있다.
+   OKFont는 자모를 다시 합쳐 조합해주는 셰이핑을 지원하지 않아서, 이런 값을 그대로
+   SVG에 넣으면 이름/직함/부서처럼 직접 타이핑한 필드에서 글자가 낱개 자모(ㅇ,ㄴ,ㅁ 등)로
+   깨져 보였다(계열사명·주소처럼 선택/API로 채워지는 값은 원래 완성형이라 문제 없었음).
+   → 값을 읽는 단일 지점(gv)에서 항상 NFC로 정규화해서 이 문제를 근본적으로 막는다. */
+function gv(id){var e=el(id);return e&&e.value?e.value.normalize('NFC'):'';}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(m){var t=el('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast';},2500);}
 
