@@ -407,10 +407,10 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   </div>
   <div class="sec" style="margin-bottom:12px">
     <div class="sub-t f">📞 연락처</div>
-    <div id="tel-row" class="fr1"><label>전화번호</label><input id="f-tel" placeholder="00-0000-0000" oninput="upv()"></div>
-    <div id="fax-row" class="fr1" style="display:none;margin-top:10px"><label>FAX</label><input id="f-fax" placeholder="00-0000-0000" oninput="upv()"></div>
+    <div id="tel-row" class="fr1"><label>전화번호</label><input id="f-tel" placeholder="00-0000-0000" inputmode="numeric" oninput="onPhoneInput('f-tel')"></div>
+    <div id="fax-row" class="fr1" style="display:none;margin-top:10px"><label>FAX</label><input id="f-fax" placeholder="00-0000-0000" inputmode="numeric" oninput="onPhoneInput('f-fax')"></div>
     <div class="fr1" style="margin-top:10px">
-      <label>휴대폰</label><input id="f-mob" placeholder="010-0000-0000" oninput="upv()">
+      <label>휴대폰</label><input id="f-mob" placeholder="010-0000-0000" inputmode="numeric" oninput="onPhoneInput('f-mob')">
     </div>
     <div class="fr1" style="margin-top:10px">
       <label>이메일 1</label>
@@ -636,6 +636,33 @@ function el(id){return document.getElementById(id);}
    깨져 보였다(계열사명·주소처럼 선택/API로 채워지는 값은 원래 완성형이라 문제 없었음).
    → 값을 읽는 단일 지점(gv)에서 항상 NFC로 정규화해서 이 문제를 근본적으로 막는다. */
 function gv(id){var e=el(id);return e&&e.value?e.value.normalize('NFC'):'';}
+
+/* ── 전화/휴대폰 자동 하이픈(-) ─────────────────────────────
+   서울(02)은 2-3-4/2-4-4, 그 외 지역번호·휴대폰은 3-3-4/3-4-4 패턴으로
+   입력하는 대로 자동으로 '-'를 넣어준다. 숫자만 남기고 다시 포맷하므로
+   붙여넣기(복사한 번호에 이미 -가 있어도) 해도 항상 깨끗하게 정리된다. */
+function formatPhoneKR(v){
+  var d=(v||'').replace(/[^0-9]/g,'').slice(0,11);
+  if(!d) return '';
+  if(d.slice(0,2)==='02'){
+    if(d.length<3) return d;
+    if(d.length<=6) return d.slice(0,2)+'-'+d.slice(2);
+    if(d.length<=9) return d.slice(0,2)+'-'+d.slice(2,5)+'-'+d.slice(5);
+    return d.slice(0,2)+'-'+d.slice(2,6)+'-'+d.slice(6,10);
+  }
+  if(d.length<4) return d;
+  if(d.length<7) return d.slice(0,3)+'-'+d.slice(3);
+  if(d.length===10) return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6,10);
+  if(d.length<=10) return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7,11);
+}
+function onPhoneInput(id){
+  var e=el(id); if(!e) return;
+  e.value=formatPhoneKR(e.value);
+  var p=e.value.length; e.setSelectionRange&&e.setSelectionRange(p,p);
+  upv();
+}
+
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(m){var t=el('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast';},2500);}
 
