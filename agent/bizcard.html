@@ -748,6 +748,37 @@ function loadOpentype(){
   });
   return _otLoadPromise;
 }
+/* ── [버그 수정] opentype.js는 WOFF2를 직접 못 읽는다 ──────────────────
+   opentype.js에 OKFont(.woff2)를 그대로 넘기면 "WOFF2 require an external
+   decompressor library" 에러를 던지고, textToOutlines()가 이를 조용히
+   실패로 처리해 항상 <text> 방식으로 되돌아갔다(그래서 "벡터화가 안 된다"는
+   증상이 계속 발생). → wawoff2(구글 woff2 레퍼런스 구현의 WASM 빌드)로
+   WOFF2를 TTF로 먼저 풀어준 뒤 opentype.js에 넘긴다. */
+var WOFF2_BINDING_CDN='https://cdn.jsdelivr.net/npm/wawoff2@2.0.1/build/decompress_binding.js';
+var _woff2ModPromise=null;
+function loadWoff2Module(){
+  if(_woff2ModPromise) return _woff2ModPromise;
+  _woff2ModPromise=new Promise(function(resolve,reject){
+    if(window.Module&&window.Module.decompress){ resolve(window.Module); return; }
+    window.Module=window.Module||{};
+    var prevInit=window.Module.onRuntimeInitialized;
+    window.Module.onRuntimeInitialized=function(){
+      if(prevInit){ try{prevInit();}catch(e){} }
+      resolve(window.Module);
+    };
+    var s=document.createElement('script');
+    s.src=WOFF2_BINDING_CDN;
+    s.onerror=function(){reject(new Error('woff2 디코더 로드 실패'));};
+    document.head.appendChild(s);
+  });
+  return _woff2ModPromise;
+}
+async function decompressWoff2(arrayBuffer){
+  var mod=await loadWoff2Module();
+  var result=mod.decompress(new Uint8Array(arrayBuffer));
+  if(result===false||result==null) throw new Error('WOFF2 압축 해제 실패');
+  return result.buffer.slice(result.byteOffset,result.byteOffset+result.byteLength);
+}
 var FONT_URL_BY_WEIGHT={300:'/imagesAI/agent/fonts/Ok-Light.woff2',500:'/imagesAI/agent/fonts/Ok-Medium.woff2'};
 var _fontObjCache={};
 function loadFontObj(weight){
@@ -759,7 +790,9 @@ function loadFontObj(weight){
       if(!res.ok) throw new Error('font fetch failed: '+url);
       return res.arrayBuffer();
     }).then(function(buf){
-      return ot.parse(buf);
+      return decompressWoff2(buf);
+    }).then(function(ttfBuf){
+      return ot.parse(ttfBuf);
     });
   });
   _fontObjCache[key]=p;
@@ -1590,12 +1623,13 @@ async function downloadSVG(face){
   }
 
   /* ── STEP 4.5: 텍스트 → 벡터 외곽선(path) 변환 (Illustrator 대응) ──── */
-  var outlined=false;
+  var outlined=false, outlineErr=null;
   try{
     svg=await textToOutlines(svg);
     outlined=true;
   }catch(e){
-    /* opentype.js 로드 실패/네트워크 차단 등 — 기존 <text>+임베딩 폰트로 계속 진행 */
+    outlineErr=e;
+    console.error('[SVG 폰트 아웃라인 변환 실패]', e); /* opentype.js/wawoff2 로드 실패, 네트워크 차단 등 */
   }
 
   /* ── STEP 5: <svg> style → width/height mm ─────────────────── */
