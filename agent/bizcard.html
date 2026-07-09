@@ -831,7 +831,13 @@ async function textToOutlines(svgString){
     }
     var advances=chars.map(function(c){
       var scale=fs/c.font.unitsPerEm;
-      return c.font.charToGlyph(c.ch).advanceWidth*scale;
+      var glyph=c.font.charToGlyph(c.ch);
+      var aw=glyph.advanceWidth*scale;
+      /* [버그 수정] OKFont에 없는 공백류(예: 얇은 공백 U+2009)는 advanceWidth가
+         0으로 나와서 그 다음 글자와 겹쳐버린다 → 공백 문자는 폭이 0이면
+         적당한 기본폭(글꼴크기의 1/4)으로 대체해 최소한 자리는 차지하게 한다. */
+      if(aw===0 && /\s/.test(c.ch)) aw=fs*0.25;
+      return aw;
     });
     var totalWidth=advances.reduce(function(a,b){return a+b;},0)+ls*Math.max(chars.length-1,0);
     var startX=(anchor==='end')?(x-totalWidth):(anchor==='middle')?(x-totalWidth/2):x;
@@ -840,7 +846,19 @@ async function textToOutlines(svgString){
     for(var k=0;k<chars.length;k++){
       var c=chars[k];
       var glyph=c.font.charToGlyph(c.ch);
-      d+=glyph.getPath(cursor,y,fs).toPathData(2)+' ';
+      /* [버그 수정] 폰트에 없는 글자(자소가 아니라 진짜 못 찾은 글리프,
+         .notdef)를 그대로 그리면 네모/엑스박스로 보인다. 특히 얇은 공백
+         (U+2009) 등 공백류는 OKFont에 글리프가 없는 경우가 있는데, 이건
+         안 보여야 정상이므로 아예 그리지 않고 자리만 이동시킨다.
+         공백이 아닌데 글리프가 없는 경우도(.notdef==glyph index 0) 흉한
+         박스보다는 빈 칸이 나는 게 낫다고 보고 마찬가지로 건너뛴다. */
+      var isMissing=(glyph.index===0);
+      var isSpace=/\s/.test(c.ch);
+      if(!isMissing && !isSpace){
+        d+=glyph.getPath(cursor,y,fs).toPathData(2)+' ';
+      } else if(isMissing && !isSpace){
+        console.warn('[SVG 아웃라인] 글리프 없음(폭만 확보, 렌더 생략):', JSON.stringify(c.ch), 'U+'+c.ch.codePointAt(0).toString(16));
+      }
       cursor+=advances[k]+ls;
     }
     var pathEl=doc.createElementNS('http://www.w3.org/2000/svg','path');
