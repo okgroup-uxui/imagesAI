@@ -725,6 +725,99 @@ async function embedFontCSS(withAliases){
   return '';
 }
 
+/* ── [Illustrator 대응] 텍스트 → 벡터 외곽선(path) 변환 ──────────────────
+   일러스트레이터는 SVG를 열 때 @font-face(임베딩 폰트 포함)를 거의 무시하고
+   시스템에 설치된 폰트 이름으로만 매칭한다. 그래서 OKFont를 아무리 잘
+   심어도(base64 포함) 설치 안 된 PC에서 열면 폰트가 깨진다.
+   → opentype.js(CDN)로 실제 글리프 외곽선을 추출해서 <text>를 <path>로
+     바꿔버리면, 디자인 프로그램에서 "텍스트 아웃라인화"한 것과 동일하게
+     되어 폰트 설치 여부와 무관하게 어디서 열어도 모양이 100% 동일하다.
+     네트워크가 막혀 있거나 실패하면 조용히 원래 <text>(+임베딩 폰트)로
+     남겨둔다(오프라인/사내망이어도 다운로드 자체는 항상 성공). */
+var OPENTYPE_CDN='https://cdnjs.cloudflare.com/ajax/libs/opentype.js/1.3.4/opentype.min.js';
+var _otLoadPromise=null;
+function loadOpentype(){
+  if(window.opentype) return Promise.resolve(window.opentype);
+  if(_otLoadPromise) return _otLoadPromise;
+  _otLoadPromise=new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src=OPENTYPE_CDN;
+    s.onload=function(){ window.opentype?resolve(window.opentype):reject(new Error('opentype.js load ok but global missing')); };
+    s.onerror=function(){reject(new Error('opentype.js 로드 실패'));};
+    document.head.appendChild(s);
+  });
+  return _otLoadPromise;
+}
+var FONT_URL_BY_WEIGHT={300:'/imagesAI/agent/fonts/Ok-Light.woff2',500:'/imagesAI/agent/fonts/Ok-Medium.woff2'};
+var _fontObjCache={};
+function loadFontObj(weight){
+  var key='w'+weight;
+  if(_fontObjCache[key]) return _fontObjCache[key];
+  var url=FONT_URL_BY_WEIGHT[weight]||FONT_URL_BY_WEIGHT[300];
+  var p=loadOpentype().then(function(ot){
+    return fetch(url).then(function(res){
+      if(!res.ok) throw new Error('font fetch failed: '+url);
+      return res.arrayBuffer();
+    }).then(function(buf){
+      return ot.parse(buf);
+    });
+  });
+  _fontObjCache[key]=p;
+  return p;
+}
+function normalizeWeight(fw){ return (parseInt(fw,10)>=500)?500:300; }
+async function textToOutlines(svgString){
+  var doc=new DOMParser().parseFromString(svgString,'image/svg+xml');
+  if(doc.querySelector('parsererror')) throw new Error('svg parse error');
+  var root=doc.documentElement;
+  var texts=Array.prototype.slice.call(root.querySelectorAll('text'));
+  for(var i=0;i<texts.length;i++){
+    var tEl=texts[i];
+    var fs=parseFloat(tEl.getAttribute('font-size')||'10');
+    var ls=parseFloat(tEl.getAttribute('letter-spacing')||'0');
+    var fill=tEl.getAttribute('fill')||'#000';
+    var anchor=tEl.getAttribute('text-anchor')||'start';
+    var trAttr=tEl.getAttribute('transform');
+    var trm=trAttr&&trAttr.match(/translate\(\s*([-\d.]+)[ ,]\s*([-\d.]+)\s*\)/);
+    var x=trm?parseFloat(trm[1]):parseFloat(tEl.getAttribute('x')||'0');
+    var y=trm?parseFloat(trm[2]):parseFloat(tEl.getAttribute('y')||'0');
+    var baseWeight=normalizeWeight(tEl.getAttribute('font-weight')||'300');
+
+    /* tspan(굵기가 섞인 한 줄)까지 지원 — 문자 단위로 펼쳐서 처리 */
+    var tspans=Array.prototype.filter.call(tEl.childNodes,function(n){return n.nodeType===1&&n.tagName.toLowerCase()==='tspan';});
+    var runs=tspans.length
+      ? tspans.map(function(ts){return {text:ts.textContent, weight:normalizeWeight(ts.getAttribute('font-weight')||baseWeight)};})
+      : [{text:tEl.textContent, weight:baseWeight}];
+    var fullText=runs.map(function(r){return r.text;}).join('');
+    if(!fullText){ tEl.parentNode.removeChild(tEl); continue; }
+
+    var chars=[];
+    for(var ri=0;ri<runs.length;ri++){
+      var f=await loadFontObj(runs[ri].weight);
+      for(var ci=0;ci<runs[ri].text.length;ci++) chars.push({ch:runs[ri].text[ci], font:f});
+    }
+    var advances=chars.map(function(c){
+      var scale=fs/c.font.unitsPerEm;
+      return c.font.charToGlyph(c.ch).advanceWidth*scale;
+    });
+    var totalWidth=advances.reduce(function(a,b){return a+b;},0)+ls*Math.max(chars.length-1,0);
+    var startX=(anchor==='end')?(x-totalWidth):(anchor==='middle')?(x-totalWidth/2):x;
+
+    var d='',cursor=startX;
+    for(var k=0;k<chars.length;k++){
+      var c=chars[k];
+      var glyph=c.font.charToGlyph(c.ch);
+      d+=glyph.getPath(cursor,y,fs).toPathData(2)+' ';
+      cursor+=advances[k]+ls;
+    }
+    var pathEl=doc.createElementNS('http://www.w3.org/2000/svg','path');
+    pathEl.setAttribute('d',d.trim());
+    pathEl.setAttribute('fill',fill);
+    tEl.parentNode.replaceChild(pathEl,tEl);
+  }
+  return new XMLSerializer().serializeToString(root);
+}
+
 /* ── OKFont @font-face CSS 추출 (다운로드 시 SVG/JPG에 폰트 임베딩용) ──
    withAliases=true면 배경 SVG의 CSS가 참조하는 OTOKFontL/M/B 별칭도 함께 생성한다.
    (downloadSVG/buildSVGForDownload/downloadJPG 3곳에서 중복 정의되어 있던 것을 통합) */
@@ -1496,11 +1589,23 @@ async function downloadSVG(face){
     }
   }
 
+  /* ── STEP 4.5: 텍스트 → 벡터 외곽선(path) 변환 (Illustrator 대응) ──── */
+  var outlined=false;
+  try{
+    svg=await textToOutlines(svg);
+    outlined=true;
+  }catch(e){
+    /* opentype.js 로드 실패/네트워크 차단 등 — 기존 <text>+임베딩 폰트로 계속 진행 */
+  }
+
   /* ── STEP 5: <svg> style → width/height mm ─────────────────── */
   svg=svg.replace(/<svg([^>]*)style="[^"]*"([^>]*)>/,
     '<svg$1$2 width="'+physW+'mm" height="'+physH+'mm">');
 
-  /* ── STEP 6: 루트 <svg> 바로 다음에 @font-face defs 주입 ───── */
+  /* ── STEP 6: 루트 <svg> 바로 다음에 @font-face defs 주입 ─────
+     [참고] STEP 4.5에서 아웃라인 변환에 성공했으면 이 폰트는 실제로는
+     안 쓰이지만, 남아있는 <text>(변환 실패한 일부)에 대한 안전망으로
+     항상 심어둔다 — 있어도 파일 크기 외 부작용 없음. */
   var FONT_CSS=await embedFontCSS(true);
   if(FONT_CSS){
     /* 루트 svg 태그 끝 위치 찾아서 그 뒤에 삽입 (bg-layer defs와 별개) */
@@ -1515,7 +1620,7 @@ async function downloadSVG(face){
   var a=document.createElement('a');
   a.href=url; a.download='okfg_card_'+face+'.svg'; a.click();
   setTimeout(function(){URL.revokeObjectURL(url);},3000);
-  showToast((face==='front'?'앞면':'뒷면')+' SVG 다운로드 ✓');
+  showToast((face==='front'?'앞면':'뒷면')+' SVG 다운로드 ✓'+(outlined?' (폰트 아웃라인 변환됨)':' (폰트 아웃라인 변환 실패 — 텍스트로 저장)'));
 }
 
 function downloadBothSVG(){downloadSVG('front');setTimeout(function(){downloadSVG('back');},600);}
