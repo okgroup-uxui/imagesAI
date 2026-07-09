@@ -851,34 +851,58 @@ async function textToOutlines(svgString){
         return fs*ratio;
       }
       var scale=fs/c.font.unitsPerEm;
-      return c.font.charToGlyph(c.ch).advanceWidth*scale;
+      var glyph=c.font.charToGlyph(c.ch);
+      if(glyph.index===0) return fs*1.0; /* OKFont에 없는 글자(한자 등)는 보통 전각(1em) */
+      return glyph.advanceWidth*scale;
     });
     var totalWidth=advances.reduce(function(a,b){return a+b;},0)+ls*Math.max(chars.length-1,0);
     var startX=(anchor==='end')?(x-totalWidth):(anchor==='middle')?(x-totalWidth/2):x;
 
     var d='',cursor=startX;
+    var g=doc.createElementNS('http://www.w3.org/2000/svg','g');
+    var curFrag=null; /* 폰트에 없는 글자(예: 한자)를 이어붙이는 임시 fallback 텍스트 조각 */
+    function flushFrag(){
+      if(curFrag&&curFrag.text){
+        var tf=doc.createElementNS('http://www.w3.org/2000/svg','text');
+        tf.setAttribute('x',curFrag.x); tf.setAttribute('y',y);
+        tf.setAttribute('font-size',fs); tf.setAttribute('fill',fill);
+        tf.setAttribute('font-family',"'Apple SD Gothic Neo','Malgun Gothic',sans-serif");
+        tf.textContent=curFrag.text;
+        g.appendChild(tf);
+      }
+      curFrag=null;
+    }
     for(var k=0;k<chars.length;k++){
       var c=chars[k];
       var glyph=c.font.charToGlyph(c.ch);
-      /* [버그 수정] 폰트에 없는 글자(자소가 아니라 진짜 못 찾은 글리프,
-         .notdef)를 그대로 그리면 네모/엑스박스로 보인다. 특히 얇은 공백
-         (U+2009) 등 공백류는 OKFont에 글리프가 없는 경우가 있는데, 이건
-         안 보여야 정상이므로 아예 그리지 않고 자리만 이동시킨다.
-         공백이 아닌데 글리프가 없는 경우도(.notdef==glyph index 0) 흉한
-         박스보다는 빈 칸이 나는 게 낫다고 보고 마찬가지로 건너뛴다. */
+      /* [버그 수정] 폰트에 없는 글자를 그대로 그리면 네모/엑스박스로 보인다.
+         - 공백류(얇은 공백 등)는 원래 안 보여야 하니 그냥 건너뛴다.
+         - 한자처럼 OKFont에 아예 없지만 실제로 보여야 하는 글자는 건너뛰면
+           "글자가 안 나온다"가 되어버리므로, 시스템 한글/한자 폰트로
+           대체 렌더링되는 <text> 조각으로 남겨서 최소한 내용은 보이게 한다
+           (이 부분만 벡터화가 안 되고 시스템 폰트에 의존하게 됨). */
       var isMissing=(glyph.index===0);
       var isSpace=/\s/.test(c.ch);
-      if(!isMissing && !isSpace){
+      if(!isMissing&&!isSpace){
+        flushFrag();
         d+=glyph.getPath(cursor,y,fs).toPathData(2)+' ';
-      } else if(isMissing && !isSpace){
-        console.warn('[SVG 아웃라인] 글리프 없음(폭만 확보, 렌더 생략):', JSON.stringify(c.ch), 'U+'+c.ch.codePointAt(0).toString(16));
+      } else if(isMissing&&!isSpace){
+        console.warn('[SVG 아웃라인] OKFont에 없는 글자 → 시스템 폰트로 대체:', JSON.stringify(c.ch), 'U+'+c.ch.codePointAt(0).toString(16));
+        if(!curFrag) curFrag={x:cursor,text:''};
+        curFrag.text+=c.ch;
+      } else {
+        flushFrag();
       }
       cursor+=advances[k]+ls;
     }
-    var pathEl=doc.createElementNS('http://www.w3.org/2000/svg','path');
-    pathEl.setAttribute('d',d.trim());
-    pathEl.setAttribute('fill',fill);
-    tEl.parentNode.replaceChild(pathEl,tEl);
+    flushFrag();
+    if(d.trim()){
+      var pathEl=doc.createElementNS('http://www.w3.org/2000/svg','path');
+      pathEl.setAttribute('d',d.trim());
+      pathEl.setAttribute('fill',fill);
+      g.appendChild(pathEl);
+    }
+    tEl.parentNode.replaceChild(g,tEl);
   }
   return new XMLSerializer().serializeToString(root);
 }
