@@ -1322,7 +1322,7 @@ function buildStaffFrontSVG(d){
     if(at<=0) at=maxChars;
     return [text.slice(0,at).trim(), text.slice(at).trim()];
   }
-  var ADDR_MAX_KR=22, ADDR_MAX_EN=26;
+  var ADDR_MAX_KR=26, ADDR_MAX_EN=32;
   var adKr1=d.addrKr,adKr2='';
   var pi=d.addrKr.indexOf('(');
   var krBefore=pi>0?d.addrKr.slice(0,pi).trim():d.addrKr;
