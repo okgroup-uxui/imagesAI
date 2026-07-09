@@ -1304,16 +1304,47 @@ function buildStaffFrontSVG(d){
       var lbColor='#ffffff';
       cRows+=svgT(5.5,ry,FF,'2.65','300',lbColor,null,esc(r[0]),' letter-spacing="-0.01em"');
     }
-    cRows+=svgT(r[0]?9.25:5.5,ry,FF,'2.65','300','#ffffff',null,esc(r[1]||''),' letter-spacing="-0.01em"');
+    /* [버그 수정] 라벨이 없는(2번째 이메일) 줄도 값 x는 항상 9.25로 고정해서
+       라벨 있는 다른 줄들(Tel/Mobile/E-mail)과 세로로 정렬되게 한다.
+       예전엔 라벨 없으면 x=5.5로 떨어져서 왼쪽으로 밀려 보였음. */
+    cRows+=svgT(9.25,ry,FF,'2.65','300','#ffffff',null,esc(r[1]||''),' letter-spacing="-0.01em"');
   });
 
   /* 주소 하단 고정 */
+  /* [버그 수정] "차장 Deputy General Manager 분리" 건과 같은 이유로 —
+     예전엔 국문주소는 항상 '(' 바로 앞에서, 영문주소는 항상 뒤쪽 콤마에서
+     끊었는데, 그 앞부분이 길면 줄 끝까지(오른쪽 여백 없이) 꽉 차 보였다.
+     → 앞부분이 일정 글자수를 넘으면 그 안에서 공백 기준으로 한 번 더
+     끊어서 1번째 줄 오른쪽에 항상 여백이 남게 한다. */
+  function wrapAddrLine(text,maxChars){
+    if(text.length<=maxChars) return [text,''];
+    var at=text.lastIndexOf(' ',maxChars);
+    if(at<=0) at=maxChars;
+    return [text.slice(0,at).trim(), text.slice(at).trim()];
+  }
+  var ADDR_MAX_KR=20, ADDR_MAX_EN=26;
   var adKr1=d.addrKr,adKr2='';
   var pi=d.addrKr.indexOf('(');
-  if(pi>0){adKr1=d.addrKr.slice(0,pi).trim();adKr2=d.addrKr.slice(pi);}
+  var krBefore=pi>0?d.addrKr.slice(0,pi).trim():d.addrKr;
+  var krAfter=pi>0?d.addrKr.slice(pi):'';
+  if(krBefore.length>ADDR_MAX_KR){
+    var krWrap=wrapAddrLine(krBefore,ADDR_MAX_KR);
+    adKr1=krWrap[0];
+    adKr2=(krWrap[1]+' '+krAfter).trim();
+  } else {
+    adKr1=krBefore; adKr2=krAfter;
+  }
   var adEn1=d.addrEn,adEn2='';
   var lc=d.addrEn.lastIndexOf(',',d.addrEn.length-6);
-  if(lc>8){adEn1=d.addrEn.slice(0,lc+1);adEn2=d.addrEn.slice(lc+2);}
+  var enBefore=lc>8?d.addrEn.slice(0,lc+1):d.addrEn;
+  var enAfter=lc>8?d.addrEn.slice(lc+2):'';
+  if(enBefore.length>ADDR_MAX_EN){
+    var enWrap=wrapAddrLine(enBefore,ADDR_MAX_EN);
+    adEn1=enWrap[0];
+    adEn2=(enWrap[1]+' '+enAfter).trim();
+  } else {
+    adEn1=enBefore; adEn2=enAfter;
+  }
   /* 주소 y: 연락처 마지막 행 + 8.11 (가이드라인 실측) */
   var GAP=3.53;
   var contactEndY=yO.sy+(rows.length-1)*GAP;
@@ -1326,7 +1357,10 @@ function buildStaffFrontSVG(d){
   var E1_Y=K2_Y+(adKr2?GAP:GAP);
   var E2_Y=adEn2?(E1_Y+GAP):E1_Y;
   var addrEndY=adEn2?E2_Y:(adEn1?E1_Y:(adKr2?K2_Y:K1_Y));
-  var W_Y=addrEndY+7.61;
+  /* [수정] 홈페이지 위치를 뒷면과 동일하게 고정(y=79.38). 예전엔 주소 블록
+     높이에 따라 위치가 계속 바뀌어서(addrEndY+7.61) 뒷면의 고정 위치와
+     달랐음. */
+  var W_Y=79.38;
 
 
   /* 가이드라인: 모든 텍스트는 흰색, 미입력 시 반투명 흰색 */
@@ -1363,8 +1397,15 @@ function buildStaffBackSVG(d){
   var combined=d.staffDeptEn+' | '+d.staffTitleEn;
   var bLine1=combined, bLine2='';
   if(combined.length>28){
-    var midsp=combined.lastIndexOf(' ',Math.floor(combined.length/2)+4);
-    if(midsp>5){bLine1=combined.slice(0,midsp);bLine2=combined.slice(midsp+1);}
+    /* [버그 수정] 예전엔 중간 지점에서 가장 가까운 공백을 찾아 끊었는데,
+       그러다 보니 "Deputy General Manager"처럼 직급명 문구 중간에서
+       줄이 갈라지는 경우가 있었다(차장 등). 항상 '|' 구분자에서만 끊어서
+       소속/직급 문구는 각각 항상 한 줄에 온전히 유지되게 한다. */
+    var sepIdx=combined.indexOf(' | ');
+    if(sepIdx>0){
+      bLine1=combined.slice(0,sepIdx);
+      bLine2=combined.slice(sepIdx+3);
+    }
   }
 
   var W='#ffffff';
