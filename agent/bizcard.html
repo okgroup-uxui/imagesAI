@@ -944,10 +944,17 @@ function buildExecFrontSVG(d){
     return ' font-family="'+FF+'" font-size="'+sz+'" font-weight="'+(hasInput?wt:'300')+'" letter-spacing="-0.15" fill="'+(hasInput?'#3f3b3a':'#c0c0c0')+'"';
   }
 
+  /* [버그 수정] 예전에는 Fax/이메일2가 있는 변형에서만 라벨(Tel/Mobile/E-mail)을
+     직접 그리고, 기본 변형은 배경 SVG에 미리 박혀있는 라벨 텍스트가 보이도록
+     그 영역을 커버하지 않고 비워뒀다. 그런데 SVG로 내보낼 때는 배경 SVG를
+     인라인하면서 그 안의 <text>를 전부 제거하기 때문에(STEP1 removeText),
+     기본 변형에서 라벨이 통째로 사라져 버렸다(미리보기/JPG는 배경을 이미지로만
+     그려서 문제 없었음). → 어떤 변형이든 라벨을 항상 직접 그려서 배경에
+     의존하지 않게 만든다. */
   var cRows='';
   rows.forEach(function(r,i){
     var ry=sy+i*gap;
-    if((v.f||v.e2) && r.lb){
+    if(r.lb){
       cRows+='<text transform="translate(16 '+ry+')"'+lbStFor(r.fid)+'>'+r.lb+'</text>';
     }
     cRows+='<text transform="translate(49.6 '+ry+')"'+valSt(r.fid)+'>'+esc(r.val||'')+'</text>';
@@ -962,14 +969,9 @@ function buildExecFrontSVG(d){
   var nameCover=
     '<rect x="105" y="43" width="137" height="21" fill="#ffffff" class="cover-rect"/>'+
     '<rect x="105" y="64" width="137" height="16" fill="#ffffff" class="cover-rect"/>';
-  var ctCover;
-  if(v.f||v.e2){
-    ctCover='<rect x="14" y="74" width="232" height="68" fill="#ffffff" class="cover-rect"/>';
-  } else {
-    ctCover=
-      '<rect x="49.6" y="74" width="196" height="48" fill="#ffffff" class="cover-rect"/>'+
-      '<rect x="14"   y="118" width="232" height="24" fill="#ffffff" class="cover-rect"/>';
-  }
+  /* [버그 수정] 라벨을 항상 직접 그리므로, 배경에 남아있을 수 있는 텍스트와
+     겹쳐 보이지 않도록 연락처 영역은 항상 전체를 덮는다(변형 구분 없이 동일). */
+  var ctCover='<rect x="14" y="74" width="232" height="68" fill="#ffffff" class="cover-rect"/>';
 
   /* ── 이름 / 계열사 ────────────────────────────────────── */
   var spcName=spaceKrName(d.nameKr);
