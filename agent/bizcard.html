@@ -1322,7 +1322,7 @@ function buildStaffFrontSVG(d){
     if(at<=0) at=maxChars;
     return [text.slice(0,at).trim(), text.slice(at).trim()];
   }
-  var ADDR_MAX_KR=26, ADDR_MAX_EN=32;
+  var ADDR_MAX_KR=22, ADDR_MAX_EN=26;
   var adKr1=d.addrKr,adKr2='';
   var pi=d.addrKr.indexOf('(');
   var krBefore=pi>0?d.addrKr.slice(0,pi).trim():d.addrKr;
@@ -1418,8 +1418,10 @@ function buildStaffBackSVG(d){
   var nameY=33.74;             /* 영문이름 */
   var dept1Y=nameY+4.24;       /* 37.98 */
   var dept2Y=dept1Y+3.53;      /* 41.51 */
-  /* OK금융그룹: 가이드라인 고정 y=53.82mm. 2줄 넘칠 경우 dept2Y 기준으로 밀어줌 */
-  var grpY=bLine2?dept2Y+8.11:dept1Y+15.84;  /* OK금융그룹 텍스트 */
+  /* [버그 수정] OK금융그룹/계열사 목록 위치를 가이드라인 고정값(y=53.82)으로
+     항상 동일하게 나오도록 함. 예전엔 소속·직급이 2줄로 넘치면 위로
+     당겨져서(dept2Y+8.11) 다른 경우와 위치가 달라졌었음. */
+  var grpY=53.82;  /* OK금융그룹 텍스트 */
   var affGAP=3.00;             /* 계열사 행간 8.5pt÷2.835 */
   var siteY=79.38;
 
