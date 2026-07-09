@@ -829,15 +829,29 @@ async function textToOutlines(svgString){
       var f=await loadFontObj(runs[ri].weight);
       for(var ci=0;ci<runs[ri].text.length;ci++) chars.push({ch:runs[ri].text[ci], font:f});
     }
+    /* [버그 수정] 공백류 문자는 폭을 폰트에서 가져오지 않고 유니코드 표준
+       비율로 직접 지정한다. OKFont는 얇은 공백(U+2009) 같은 특수 공백에
+       대해 0이거나 비정상적으로 큰 advanceWidth를 반환해서, 이전엔
+       "박스"로(0이 아닌 큰 폭) 보였고 박스를 안 그리게 고친 뒤에는 그
+       큰 폭만 그대로 남아 "여백이 너무 넓어" 보이는 문제로 바뀌었을 뿐이었다.
+       → 공백 문자는 항상 이 표에 정의된 em 비율로 고정폭을 쓴다. */
+    var SPACE_WIDTH_EM={
+      '\u0020':0.25, /* space */
+      '\u00A0':0.25, /* no-break space */
+      '\u2009':0.20, /* thin space */
+      '\u200A':0.10, /* hair space */
+      '\u2002':0.50, /* en space */
+      '\u2003':1.00, /* em space */
+      '\u2007':0.25, /* figure space */
+      '\u2008':0.25  /* punctuation space */
+    };
     var advances=chars.map(function(c){
+      if(/\s/.test(c.ch)){
+        var ratio=(SPACE_WIDTH_EM[c.ch]!==undefined)?SPACE_WIDTH_EM[c.ch]:0.25;
+        return fs*ratio;
+      }
       var scale=fs/c.font.unitsPerEm;
-      var glyph=c.font.charToGlyph(c.ch);
-      var aw=glyph.advanceWidth*scale;
-      /* [버그 수정] OKFont에 없는 공백류(예: 얇은 공백 U+2009)는 advanceWidth가
-         0으로 나와서 그 다음 글자와 겹쳐버린다 → 공백 문자는 폭이 0이면
-         적당한 기본폭(글꼴크기의 1/4)으로 대체해 최소한 자리는 차지하게 한다. */
-      if(aw===0 && /\s/.test(c.ch)) aw=fs*0.25;
-      return aw;
+      return c.font.charToGlyph(c.ch).advanceWidth*scale;
     });
     var totalWidth=advances.reduce(function(a,b){return a+b;},0)+ls*Math.max(chars.length-1,0);
     var startX=(anchor==='end')?(x-totalWidth):(anchor==='middle')?(x-totalWidth/2):x;
