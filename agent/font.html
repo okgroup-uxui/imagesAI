@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OK TYPE — OK금융그룹 폰트</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+@font-face { font-family:'OKche';   src: url('/imagesAI/fonts/Ok-Light.woff2')   format('woff2'); font-weight:300; font-style:normal;}
+@font-face { font-family:'OKche';   src: url('/imagesAI/fonts/Ok-Light.woff2')  format('woff2'); font-weight:500; font-style:normal;}
+@font-face { font-family:'OKche';   src: url('/imagesAI/fonts/Ok-Bold.woff2')    format('woff2'); font-weight:700; font-style:normal;}
+
+@font-face { font-family:'OKMAN';  src: url('/imagesAI/fonts/OKMAN_FONT.woff2')  format('woff2'); font-weight:400; font-style:normal;}
+@font-face { font-family:'OKDDUNG'; src: url('/imagesAI/fonts/OK_DDUNG.woff2') format('woff2'); font-weight:400; font-style:normal;}
+@font-face { font-family:'OKGUNG';  src: url('/imagesAI/fonts/OK_GUNG.woff2')  format('woff2'); font-weight:400; font-style:normal;}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #161514;
+  --paper: #ffffff;
+  --paper-tint: #FFF1EA;
+  --charcoal: #161514;
+  --line: rgba(20,19,18,0.12);
+  --line-on-dark: rgba(255,255,255,0.16);
+  --ok-orange: #FF571F;
+  --ok-orange-dim: #cc4518;
+  --desc: #514f4a;
+  --muted: #8c8983;
+  --muted-on-dark: #a7a39c;
+  --max-w: 1120px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+::selection { background: var(--ok-orange); color: #fff; }
+button { font-family: inherit; }
+
+/* ══ 1. 히어로 (다크 + 대형 글리프 그리드) ══════════ */
+.herowrap { background: var(--charcoal); color: #fff; overflow: hidden; }
+.hero-inner-anim { transition: opacity .2s linear, transform .2s linear; will-change: transform, opacity; }
+.nav { display: flex; align-items: center; gap: 4px; max-width: var(--max-w); margin: 0 auto; padding: 22px 40px 0; overflow-x: auto; position: relative; }
+.nav-mark { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.03em; color: var(--muted-on-dark); margin-right: 20px; flex-shrink: 0; }
+.nav-mark .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok-orange); box-shadow: 0 0 10px var(--ok-orange); }
+.tab-track { position: relative; display: flex; gap: 4px; }
+.tab-indicator {
+  position: absolute; bottom: 0; height: 2px; background: var(--ok-orange);
+  transition: left .35s cubic-bezier(.3,1.4,.4,1), width .35s cubic-bezier(.3,1.4,.4,1);
+}
+.tab {
+  appearance: none; background: none; border: none; cursor: pointer;
+  color: var(--muted-on-dark); font-size: 14px; font-weight: 700;
+  padding: 10px 16px; white-space: nowrap; border-bottom: 2px solid transparent;
+  transition: color .2s;
+}
+.tab:hover { color: #fff; }
+.tab.active { color: #fff; }
+
+.hero-grid {
+  display: none;
+  max-width: var(--max-w); margin: 0 auto;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 30px 40px 10px;
+}
+.hero-grid.active { display: grid; }
+.hero-cell {
+  display: flex; align-items: center; justify-content: center;
+  height: clamp(90px, 13vw, 160px);
+  font-size: clamp(48px, 9vw, 108px);
+  color: rgba(255,255,255,0.94);
+  overflow: hidden;
+  opacity: 0; transform: translateY(70px) scale(.35) rotate(-16deg);
+  transition: opacity .55s cubic-bezier(.34,1.4,.4,1), transform .75s cubic-bezier(.34,1.75,.4,1);
+}
+.hero-grid.play .hero-cell { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+.hero-cell.accent { color: var(--ok-orange); }
+.hero-cell { cursor: default; }
+.hero-grid.play .hero-cell:hover { transform: scale(1.18) rotate(-6deg); color: var(--ok-orange); transition: transform .25s cubic-bezier(.3,1.6,.4,1), color .2s; }
+
+@keyframes panelPop { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.panel.pop-in { animation: panelPop .5s cubic-bezier(.22,1,.36,1); }
+.scrollcue { text-align: center; padding: 4px 0 26px; color: var(--muted-on-dark); font-size: 20px; animation: cueBounce 1.4s ease-in-out infinite; }
+@keyframes cueBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+/* ══ 스크롤 리빌 (오버슈트 팝) ═══════════════════════ */
+.reveal { opacity: 0; transform: translateY(56px) scale(.88) rotate(var(--rot,0deg)); transition: opacity .5s ease, transform .85s cubic-bezier(.3,1.6,.4,1); }
+.reveal.in-view { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+.reveal.scale-in { transform: scale(.55) rotate(var(--rot,0deg)); }
+.reveal.scale-in.in-view { transform: scale(1) rotate(0deg); }
+
+/* ══ 스크롤 스포트라이트 (연속 스크럽) ═══════════════ */
+.spotlight { will-change: transform, opacity; opacity: .15; transform: scale(.6); }
+
+/* ══ 2. 인트로 ══════════════════════════════════════ */
+.introwrap { max-width: var(--max-w); margin: 0 auto; padding: 84px 40px 76px; text-align: center; }
+.intro-title { font-size: clamp(34px, 5vw, 56px); font-weight: 800; color: var(--ok-orange); letter-spacing: -0.01em; margin-bottom: 30px; }
+.intro-desc p { font-size: 15px; color: var(--desc); line-height: 1.9; margin-bottom: 14px; }
+.intro-desc p:last-child { margin-bottom: 0; }
+
+/* ══ 3. 굵기 쇼케이스 (오케이체 한정) ════════════════ */
+.weightwrap { background: var(--ok-orange); color: #fff; padding: 76px 40px 60px; }
+.weightwrap-inner { max-width: var(--max-w); margin: 0 auto; text-align: center; }
+.weight-line { font-size: clamp(26px, 5.4vw, 52px); line-height: 1.28; font-family:'OKche'; }
+.weight-line.w300 { font-weight: 300; }
+.weight-line.w500 { font-weight: 500; }
+.weight-line.w700 { font-weight: 700; }
+.weight-caption { margin-top: 30px; font-size: 13.5px; color: rgba(255,255,255,.85); line-height: 1.8; }
+
+/* ══ 4. 캐릭터 쇼케이스 ══════════════════════════════ */
+.charwrap { background: var(--paper-tint); padding: 84px 40px 70px; text-align: center; }
+.charwrap-inner { max-width: var(--max-w); margin: 0 auto; }
+.char-display { font-size: clamp(64px, 12vw, 168px); line-height: 1.05; color: var(--ink); margin-bottom: 26px; }
+.char-display .lw { display: inline-block; animation: letterBob 2.6s ease-in-out infinite; }
+@keyframes letterBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.char-caption { font-size: 14px; color: var(--desc); line-height: 1.8; max-width: 520px; margin: 0 auto; }
+
+/* ══ 5. 테스트 섹션 ══════════════════════════════════ */
+.testwrap { max-width: var(--max-w); margin: 0 auto; padding: 88px 40px 70px; }
+.test-title { text-align: center; font-size: clamp(24px, 3.6vw, 36px); font-weight: 700; line-height: 1.5; margin-bottom: 48px; }
+.test-title .accent { color: var(--ok-orange); }
+
+.test-canvas {
+  border: 1px solid var(--line); border-radius: 6px; background: #fff;
+  padding: 44px 32px; min-height: 200px; margin-bottom: 40px;
+}
+.test-type {
+  width: 100%; outline: none; line-height: 1.28; color: var(--ink);
+  word-break: keep-all; overflow-wrap: break-word; caret-color: var(--ok-orange);
+}
+.test-type:empty::before { content: attr(data-placeholder); color: #c9c6bf; }
+
+.test-controls { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; width: 100%; }
+.weight-btns { display: flex; align-items: baseline; gap: 20px; }
+.weight-btn {
+  appearance: none; background: none; border: none; cursor: pointer;
+  font-family: inherit; color: var(--muted); font-size: 20px; padding: 0;
+  transition: color .15s, opacity .15s;
+}
+.weight-btn:hover { color: var(--ink); }
+.weight-btn.active { color: var(--ok-orange); }
+.weight-btn.pending { opacity: .4; }
+.test-divider { width: 1px; height: 22px; background: var(--line); flex-shrink: 0; }
+
+.size-block { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.size-block label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.size-block input[type="range"] {
+  width: 220px; -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer;
+}
+.size-block input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--line); border-radius: 1px; }
+.size-block input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--ok-orange); border: none; margin-top: -5.5px; transition: transform .12s;
+}
+.size-block input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.size-block input[type="range"]::-moz-range-track { height: 1px; background: var(--line); border-radius: 1px; }
+.size-block input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--ok-orange); border: none; }
+.size-block .val { font-size: 12px; color: var(--desc); width: 44px; font-variant-numeric: tabular-nums; }
+
+/* ══ 6. 다운로드 ══════════════════════════════════════ */
+.downloadwrap { background: var(--ok-orange); color: #fff; padding: 84px 40px 90px; text-align: center; }
+.download-title { font-size: clamp(34px, 5vw, 56px); font-weight: 800; margin-bottom: 22px; letter-spacing: -0.01em; }
+.download-desc { font-size: 13.5px; color: rgba(255,255,255,.9); line-height: 1.85; margin-bottom: 34px; }
+.download-meta { font-size: 12.5px; color: rgba(255,255,255,.85); margin-bottom: 18px; }
+.download-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.pill-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: #fff; color: var(--ok-orange); border: none; border-radius: 30px;
+  padding: 14px 30px; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: transform .12s, background .2s, color .2s;
+}
+.pill-btn:hover { transform: translateY(-1px); }
+.pill-btn.done { background: #fff; color: #2a7a2a; }
+.pill-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+/* ══ 하단 ═════════════════════════════════════════════ */
+.footer {
+  max-width: var(--max-w); margin: 0 auto; padding: 30px 40px 60px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.footer-license { font-size: 11.5px; color: var(--muted); line-height: 1.7; }
+.footer-all-btn {
+  flex-shrink: 0; background: none; border: 1px solid var(--line); color: var(--desc);
+  border-radius: 30px; padding: 10px 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: border-color .2s, color .2s;
+}
+.footer-all-btn:hover { border-color: var(--ok-orange); color: var(--ok-orange); }
+
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--ink); border: 1px solid rgba(255,255,255,.12); border-radius: 30px;
+  padding: 10px 20px; font-size: 13px; color: #fff;
+  pointer-events: none; transition: transform .3s ease, opacity .3s ease;
+  opacity: 0; z-index: 999; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+:focus-visible { outline: 2px solid var(--ok-orange); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; animation: none !important; }
+  .reveal, .hero-cell { opacity: 1 !important; transform: none !important; }
+}
+
+@media (max-width: 780px) {
+  .nav { padding: 18px 20px 0; }
+  .hero-grid { grid-template-columns: repeat(3, 1fr); padding: 20px 20px 6px; }
+  .introwrap, .testwrap { padding: 56px 20px 50px; }
+  .weightwrap, .charwrap, .downloadwrap { padding: 56px 20px 46px; }
+  .footer { padding: 24px 20px 48px; }
+}
+</style>
+</head>
+<body>
+
+<div class="herowrap">
+  <nav class="nav" id="tabs" role="tablist">
+    <div class="nav-mark"><span class="dot"></span>OK TYPE</div>
+    <div class="tab-track" id="tabTrack">
+      <span class="tab-indicator" id="tabIndicator"></span>
+    </div>
+  </nav>
+  <div id="heroGrids"></div>
+  <div class="scrollcue">⌄</div>
+</div>
+
+<main id="stage"></main>
+
+<footer class="footer">
+  <div class="footer-license" id="licenseNote"></div>
+  <button class="footer-all-btn" id="dlAllBtn">보유 파일 전체 다운로드</button>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const FONT_BASE = '/imagesAI/fonts/';
+const ALL_ZIP   = 'OK금융그룹_전체폰트.zip';
+const DEFAULT_TEXT = '오늘도 좋은 하루\nOK금융그룹';
+
+function toDesktopFile(webFile) { return webFile.replace(/\.(woff2?|ttf)$/i, '.ttf'); }
+
+const FONTS = [
+  {
+    id: 'okche', name: '오케이체', family: 'OKche',
+    heroGlyphs: [['오',1],['케',0],['이',0],['체',1],['9',0],['0',0],['7',0],['4',0],['ㅎ',0],['ㅁ',0],['#',0],['%',0]],
+    intro: [
+      "OK금융그룹의 브랜드 아이덴티티를 담은 기본 서체,",
+      "‘오케이체’를 소개합니다.",
+      "본문과 UI 어디에서나 일관된 톤을 만들어주는,",
+      "OK금융그룹 서비스 전반의 기본 글꼴입니다."
+    ],
+    hasWeightChoice: true,
+    weights: [
+      { label: 'Light',  value: 300, file: 'Ok-Light.woff2',  ready: true },
+      { label: 'Medium', value: 500, file: 'Ok-Medium.woff2', ready: true },
+      { label: 'Bold',   value: 700, file: 'Ok-Bold.woff2',   ready: true },
+    ],
+    charSample: '가나다',
+    charCaption: '차분하고 단정한 형태로, 많은 양의 텍스트를 읽을 때도 편안한 리듬을 유지합니다.',
+    testTitle: ['오케이체를', '테스트 해보세요.'],
+  },
+  {
+    id: 'okman', name: '읏맨체', family: 'OKMAN',
+    heroGlyphs: [['읏',1],['맨',0],['체',0],['9',0],['A',0],['*',0],['0',0],['7',0],['ㅋ',0],['#',0],['ㅎ',0],['4',0]],
+    intro: [
+      "OK금융그룹 브랜드 캐릭터에서 영감을 받은,",
+      "포인트 서체 ‘읏맨체’를 소개합니다.",
+      "짧은 타이틀과 강조 문구에 발랄한 리듬을 더해,",
+      "서비스 곳곳에 친근한 인상을 남깁니다."
+    ],
+    hasWeightChoice: false,
+    weights: [ { label: 'Regular', value: 400, file: 'OKMAN_FONT.woff2', ready: true } ],
+    charSample: '가나다',
+    charCaption: '짧은 타이틀과 포인트 문구에 어울리는 발랄한 리듬을 가진 서체입니다.',
+    testTitle: ['읏맨체를', '테스트 해보세요.'],
+  },
+  {
+    id: 'okddung', name: '읏뚱체', family: 'OKDDUNG',
+    heroGlyphs: [['읏',1],['뚱',0],['체',0],['9',0],['A',0],['*',0],['0',0],['7',0],['ㅋ',0],['#',0],['ㅎ',0],['4',0]],
+    intro: [
+      "OK금융그룹 브랜드 캐릭터에서 영감을 받은,",
+      "포인트 서체 ‘읏뚱체’를 소개합니다.",
+      "둥글둥글하고 친근한 형태로, 딱딱해 보일 수 있는",
+      "금융 서비스에 편안한 인상을 더해줍니다."
+    ],
+    hasWeightChoice: false,
+    weights: [ { label: 'Regular', value: 400, file: 'OK_DDUNG.woff2', ready: true } ],
+    charSample: '가나다',
+    charCaption: '둥글둥글하고 친근한 느낌의 캐릭터형 포인트 서체입니다.',
+    testTitle: ['읏뚱체를', '테스트 해보세요.'],
+  },
+  {
+    id: 'okgung', name: '읏궁체', family: 'OKGUNG',
+    heroGlyphs: [['읏',1],['궁',0],['체',0],['9',0],['A',0],['*',0],['0',0],['7',0],['ㅋ',0],['#',0],['ㅎ',0],['4',0]],
+    intro: [
+      "OK금융그룹 브랜드 캐릭터에서 영감을 받은,",
+      "포인트 서체 ‘읏궁체’를 소개합니다.",
+      "힘 있는 굵은 획으로 시선을 끌어야 하는",
+      "배너와 헤드라인에 어울리는 서체입니다."
+    ],
+    hasWeightChoice: false,
+    weights: [ { label: 'Regular', value: 400, file: 'OK_GUNG.woff2', ready: true } ],
+    charSample: '가나다',
+    charCaption: '힘 있는 굵은 획으로 시선을 끄는 강조용 서체입니다.',
+    testTitle: ['읏궁체를', '테스트 해보세요.'],
+  },
+];
+
+const tabsNav = document.getElementById('tabs');
+const tabTrack = document.getElementById('tabTrack');
+const tabIndicator = document.getElementById('tabIndicator');
+const heroGridsEl = document.getElementById('heroGrids');
+const stageEl = document.getElementById('stage');
+
+// ── 상단 탭 ──────────────────────────────────────────
+FONTS.forEach((f, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'tab' + (i===0?' active':'');
+  btn.dataset.tab = f.id;
+  btn.setAttribute('role','tab');
+  btn.setAttribute('aria-selected', i===0);
+  btn.textContent = f.name;
+  tabTrack.appendChild(btn);
+});
+
+function moveIndicator(tabBtn) {
+  tabIndicator.style.left = tabBtn.offsetLeft + 'px';
+  tabIndicator.style.width = tabBtn.offsetWidth + 'px';
+}
+
+// ── 히어로 글리프 그리드 ─────────────────────────────
+heroGridsEl.innerHTML = FONTS.map((f, i) => `
+  <div class="hero-grid${i===0?' active':''}" data-hero="${f.id}">
+    ${f.heroGlyphs.map(([ch, accent], idx) => `<div class="hero-cell${accent?' accent':''}" style="font-family:'${f.family}';transition-delay:${idx*40}ms">${ch}</div>`).join('')}
+  </div>
+`).join('');
+
+// ── 본문 패널 ────────────────────────────────────────
+stageEl.innerHTML = FONTS.map((f, i) => {
+  const defaultWi = Math.max(0, f.weights.findIndex(w => w.ready));
+  const defaultW = f.weights[defaultWi];
+
+  const weightSection = f.hasWeightChoice ? `
+    <div class="weightwrap">
+      <div class="weightwrap-inner">
+        <div class="weight-line w300 spotlight">${f.name} Light</div>
+        <div class="weight-line w500 spotlight">${f.name} Medium</div>
+        <div class="weight-line w700 spotlight">${f.name} Bold</div>
+        <div class="weight-caption reveal" style="transition-delay:.1s">${f.name}는 한글, 영문, 숫자, 기호를 포함한 글자 세트로 구성되며<br>Light · Medium · Bold 세 가지 굵기로 제작되었습니다.</div>
+      </div>
+    </div>` : '';
+
+  const weightButtons = f.hasWeightChoice ? `
+    <div class="weight-btns">
+      ${f.weights.map((w, wi) => `
+        <button class="weight-btn${wi===defaultWi?' active':''}${w.ready?'':' pending'}" data-panel="${f.id}" data-wi="${wi}" style="font-weight:${w.value}">
+          ${w.label}${w.ready?'':' (준비중)'}
+        </button>
+      `).join('')}
+    </div>
+    <div class="test-divider"></div>` : '';
+
+  return `
+  <section class="panel" id="panel-${f.id}" data-panel-id="${f.id}" style="display:${i===0?'block':'none'}">
+
+    <div class="introwrap">
+      <div class="intro-title reveal" style="--rot:-3deg">${f.name}</div>
+      <div class="intro-desc reveal" style="transition-delay:.1s">${f.intro.map(line=>`<p>${line}</p>`).join('')}</div>
+    </div>
+
+    ${weightSection}
+
+    <div class="charwrap">
+      <div class="charwrap-inner">
+        <div class="char-display spotlight" style="font-family:'${f.family}';font-weight:${defaultW.value}">${f.charSample.split('').map((ch, ci) => `<span class="lw" style="animation-delay:${ci*0.18}s">${ch}</span>`).join('')}</div>
+        <div class="char-caption reveal" style="transition-delay:.12s">${f.charCaption}</div>
+      </div>
+    </div>
+
+    <div class="testwrap">
+      <div class="test-title reveal">${f.testTitle[0]}<br><span class="accent">${f.testTitle[1]}</span></div>
+
+      <div class="test-canvas reveal" style="transition-delay:.1s">
+        <div class="test-type" id="type-${f.id}" contenteditable="true" spellcheck="false"
+          data-placeholder="여기를 클릭하고 직접 타이핑해보세요"
+          style="font-family:'${f.family}';font-weight:${defaultW.value};font-size:64px;">${DEFAULT_TEXT.replace(/\n/g,'<br>')}</div>
+      </div>
+
+      <div class="test-controls reveal" style="transition-delay:.18s">
+        ${weightButtons}
+        <div class="size-block">
+          <label for="size-${f.id}">크기</label>
+          <input type="range" id="size-${f.id}" min="28" max="100" value="64">
+          <span class="val" id="sizeVal-${f.id}">64px</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="downloadwrap">
+      <div class="download-title reveal" style="--rot:3deg">Download</div>
+      <div class="download-desc reveal" id="license-${f.id}" style="transition-delay:.08s"></div>
+      <div class="download-meta reveal" id="meta-${f.id}" style="transition-delay:.14s"></div>
+      <div class="download-buttons reveal" style="transition-delay:.2s">
+        <button class="pill-btn" data-id="${f.id}" data-wi="${defaultWi}" data-os="win">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3V5.5Zm8.4-1.2L21 3v8.4h-9.6V4.3ZM3 12.6h7.5v7.1L3 18.6v-6ZM11.4 12.6H21V21l-9.6-1.4v-7Z"/></svg>
+          Windows용 ↓
+        </button>
+        <button class="pill-btn" data-id="${f.id}" data-wi="${defaultWi}" data-os="mac">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16.7 12.7c0-2 1.6-3 1.7-3.1-1-1.4-2.4-1.6-3-1.6-1.2-.1-2.3.7-2.9.7-.6 0-1.5-.7-2.6-.7-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6.1 1 8.1.7 1 1.5 2.1 2.6 2 1-.1 1.4-.6 2.6-.6s1.5.6 2.6.6c1.1 0 1.9-1 2.5-2 .5-.7.8-1.4 1-2.1-2.5-1-2.2-3.6-2.2-3.3Zm-3.1-6.3c.5-.6.9-1.5.8-2.4-.8 0-1.7.5-2.3 1.1-.5.6-.9 1.5-.8 2.3.9.1 1.8-.4 2.3-1Z"/></svg>
+          Mac용 ↓
+        </button>
+      </div>
+    </div>
+
+  </section>`;
+}).join('');
+
+document.getElementById('licenseNote').textContent =
+  'Copyright ⓒ OK Financial Group. All Rights Reserved. 사내 업무 및 서비스 제작 목적으로만 사용할 수 있습니다.';
+
+FONTS.forEach(f => {
+  document.getElementById(`license-${f.id}`).innerHTML =
+    `${f.name}는 OK금융그룹 내부 브랜드 자산입니다.<br>사내 업무 및 서비스 제작 목적에 한해 자유롭게 사용할 수 있습니다.`;
+});
+
+function updateMeta(f, wi) {
+  const w = f.weights[wi];
+  const desktopFile = toDesktopFile(w.file);
+  document.getElementById(`meta-${f.id}`).textContent =
+    `${f.name}${f.hasWeightChoice ? ' '+w.label : ''} · Windows / Mac 모두 같은 TTF 파일(${desktopFile})을 받아요`;
+}
+FONTS.forEach(f => updateMeta(f, Math.max(0, f.weights.findIndex(w => w.ready))));
+
+// ── 탭 전환 (히어로 그리드 + 본문 패널 동시 전환) ────
+function playHeroGrid(id) {
+  const grid = document.querySelector(`.hero-grid[data-hero="${id}"]`);
+  if (!grid) return;
+  grid.classList.remove('play');
+  // 리플로우 후 재생 클래스 추가 → 매번 새로 stagger 애니메이션이 보이도록
+  requestAnimationFrame(() => requestAnimationFrame(() => grid.classList.add('play')));
+}
+
+tabsNav.addEventListener('click', e => {
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+  btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+  moveIndicator(btn);
+  document.querySelectorAll('.hero-grid').forEach(g => g.classList.toggle('active', g.dataset.hero === btn.dataset.tab));
+  document.querySelectorAll('.panel').forEach(p => {
+    const show = p.dataset.panelId === btn.dataset.tab;
+    p.style.display = show ? 'block' : 'none';
+    if (show) { p.classList.remove('pop-in'); requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('pop-in'))); }
+  });
+  playHeroGrid(btn.dataset.tab);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// 초기 인디케이터 위치 세팅
+requestAnimationFrame(() => moveIndicator(document.querySelector('.tab.active')));
+window.addEventListener('resize', () => moveIndicator(document.querySelector('.tab.active')));
+
+// 첫 화면 진입 시 히어로 애니메이션 재생
+playHeroGrid(FONTS[0].id);
+
+// ── 스크롤 리빌 ──────────────────────────────────────
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ── 히어로 패럴랙스 + 커서 틸트 (스크롤/마우스에 반응) ──
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function tickSpotlights() {
+  const vh = window.innerHeight;
+  const mid = vh / 2;
+  document.querySelectorAll('.spotlight').forEach(el => {
+    if (el.offsetParent === null) return; // 숨겨진 패널은 skip
+    const rect = el.getBoundingClientRect();
+    const center = rect.top + rect.height / 2;
+    const delta = (center - mid) / mid;               // -1(위) ~ 0(중앙) ~ 1(아래)
+    const clamped = Math.max(-1, Math.min(1, delta));
+    const progress = 1 - Math.abs(clamped);            // 중앙일 때 1
+    const scale = 0.62 + 0.5 * progress;
+    const opacity = 0.15 + 0.85 * progress;
+    const drift = clamped * 34;
+    el.style.transform = `translateY(${drift}px) scale(${scale})`;
+    el.style.opacity = opacity;
+  });
+}
+
+const heroGridsWrap = document.getElementById('heroGrids');
+const heroWrapEl = document.querySelector('.herowrap');
+heroGridsWrap.dataset.tiltX = 0;
+heroGridsWrap.dataset.tiltY = 0;
+
+function applyHeroTransform() {
+  const y = window.scrollY;
+  const vh = window.innerHeight;
+  const p = Math.min(1, y / (vh * 0.9));
+  const tiltX = Number(heroGridsWrap.dataset.tiltX || 0);
+  const tiltY = Number(heroGridsWrap.dataset.tiltY || 0);
+  heroGridsWrap.style.transform =
+    `translateY(${p * -60}px) scale(${1 - p * 0.08}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+  heroGridsWrap.style.opacity = 1 - p * 0.75;
+}
+
+let ticking = false;
+function onScroll() {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    tickSpotlights();
+    applyHeroTransform();
+    ticking = false;
+  });
+}
+
+if (!reduceMotion) {
+  heroGridsWrap.style.perspective = '900px';
+  heroGridsWrap.style.transition = 'transform .1s linear, opacity .2s linear';
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  tickSpotlights();
+  applyHeroTransform();
+
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    heroWrapEl.addEventListener('mousemove', e => {
+      const r = heroWrapEl.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      heroGridsWrap.dataset.tiltX = py * -8;
+      heroGridsWrap.dataset.tiltY = px * 10;
+      applyHeroTransform();
+    });
+    heroWrapEl.addEventListener('mouseleave', () => {
+      heroGridsWrap.dataset.tiltX = 0;
+      heroGridsWrap.dataset.tiltY = 0;
+      applyHeroTransform();
+    });
+  }
+} else {
+  document.querySelectorAll('.spotlight').forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+}
+
+// ── 굵기 선택 (오케이체, 개별 버튼) ──────────────────
+document.querySelectorAll('.weight-btn').forEach(wbtn => {
+  wbtn.addEventListener('click', () => {
+    const fid = wbtn.dataset.panel;
+    const f = FONTS.find(x => x.id === fid);
+    const wi = Number(wbtn.dataset.wi);
+    const w = f.weights[wi];
+    document.querySelectorAll(`.weight-btn[data-panel="${fid}"]`).forEach(b => b.classList.remove('active'));
+    wbtn.classList.add('active');
+    document.getElementById(`type-${fid}`).style.fontWeight = w.value;
+    const charEl = document.querySelector(`#panel-${fid} .char-display`);
+    if (charEl) charEl.style.fontWeight = w.value;
+    updateMeta(f, wi);
+    document.querySelectorAll(`.pill-btn[data-id="${fid}"]`).forEach(btn => { btn.dataset.wi = wi; btn.disabled = !w.ready; });
+    if (!w.ready) showToast(`${f.name} ${w.label} 파일이 아직 없어요 — fonts/${toDesktopFile(w.file)} 로 추가해주세요`);
+  });
+});
+
+// ── 크기 슬라이더 ───────────────────────────────────
+FONTS.forEach(f => {
+  const range = document.getElementById(`size-${f.id}`);
+  const val = document.getElementById(`sizeVal-${f.id}`);
+  range.addEventListener('input', () => {
+    val.textContent = range.value + 'px';
+    document.getElementById(`type-${f.id}`).style.fontSize = range.value + 'px';
+  });
+});
+
+// ── 다운로드 ────────────────────────────────────────
+function triggerDownload(url, filename) {
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+document.querySelectorAll('.pill-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = FONTS.find(x => x.id === btn.dataset.id);
+    if (!f) return;
+    const wi = Number(btn.dataset.wi || 0);
+    const w = f.weights[wi];
+    if (!w.ready) return;
+    const desktopFile = toDesktopFile(w.file);
+    triggerDownload(FONT_BASE + desktopFile, desktopFile);
+    const original = btn.innerHTML;
+    btn.classList.add('done'); btn.innerHTML = '완료';
+    showToast(`✓ ${f.name}${f.hasWeightChoice ? ' '+w.label : ''} (${btn.dataset.os === 'win' ? 'Windows' : 'Mac'}) 다운로드 시작`);
+    setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = original; }, 2000);
+  });
+});
+
+document.getElementById('dlAllBtn').addEventListener('click', () => {
+  triggerDownload(FONT_BASE + ALL_ZIP, ALL_ZIP);
+  showToast('✓ 보유 파일 전체 ZIP 다운로드 시작');
+});
+</script>
+</body>
+</html>
