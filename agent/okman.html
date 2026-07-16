@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>읏맨 Image Generator</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @font-face {
+    font-family: 'OKche';
+    src: url('/imagesAI/fonts/Ok-Light.woff2') format('woff2'),
+         url('/imagesAI/fonts/Ok-Light.woff2') format('woff');
+    font-weight: 700;
+    font-style: normal;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --orange: #FF571F;
+    --orange-hover: #FF7A4A;
+    --bg: #F7F7F9;
+    --gray: #F1F3F5;
+    --gray-2: #E8E8E8;
+    --gray-3: #999999;
+    --text: #111111;
+    --text-sub: #555555;
+  }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 60px 20px; }
+  .badge { display: inline-block; background: var(--orange); color: white; font-size: 11px; font-weight: 700; letter-spacing: 2px; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; text-transform: uppercase; }
+  h1 { font-size: 36px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; text-align: center; color: var(--text); font-family: 'OKche', 'Noto Sans KR', sans-serif; }
+  h1 span { color: var(--orange); }
+  .subtitle { color: var(--gray-3); font-size: 15px; font-weight: 300; margin-bottom: 48px; }
+  .card { background: #FFFFFF; border: 1.5px solid var(--gray-2); border-radius: 20px; padding: 32px; width: 100%; max-width: 560px; margin-bottom: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #161C26; text-transform: uppercase; margin-bottom: 12px; width: 100%; text-align: center; }
+  textarea { width: 100%; background: var(--gray); border: 1.5px solid var(--gray-2); border-radius: 12px; padding: 16px; color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 15px; resize: none; outline: none; height: 140px; transition: border-color 0.2s; line-height: 1.6; text-align: center; display: flex; align-items: center; vertical-align: middle; padding-top: 52px; }
+  textarea:focus { border-color: var(--orange); background: #fff; }
+  textarea::placeholder { color: var(--gray-3); }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: center; margin-bottom: 36px; }
+  .example-tag { background: var(--gray); border: 1.5px solid var(--gray-2); border-radius: 20px; padding: 6px 14px; font-size: 13px; color: var(--text-sub); cursor: pointer; transition: all 0.2s; }
+  .example-tag:hover { background: var(--orange); border-color: var(--orange); color: white; }
+  .generate-btn { width: 100%; background: var(--orange); border: none; border-radius: 12px; padding: 16px; color: white; font-family: 'OKche', 'Noto Sans KR', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 0; transition: all 0.15s; }
+  .generate-btn:hover { background: var(--orange-hover); transform: scale(0.97); box-shadow: none; }
+  .generate-btn:disabled { background: var(--gray-2); color: var(--gray-3); cursor: not-allowed; transform: none; box-shadow: none; }
+  .result-area { width: 100%; max-width: 560px; display: none; }
+  .result-area.visible { display: block; }
+  .result-card { background: #FFFFFF; border: 1.5px solid var(--gray-2); border-radius: 20px; padding: 32px; text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
+  .loading { display: none; flex-direction: column; align-items: center; gap: 16px; padding: 40px 0; }
+  .loading.visible { display: flex; }
+  .spinner { width: 48px; height: 48px; border: 3px solid var(--gray-2); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-prompt { color: var(--text-sub); font-size: 13px; background: var(--gray); padding: 8px 16px; border-radius: 8px; font-style: italic; }
+  .result-image-wrap { display: none; flex-direction: column; align-items: center; gap: 20px; }
+  .result-image-wrap.visible { display: flex; }
+  .result-image { max-width: 100%; max-height: 400px; border-radius: 12px; }
+  .download-btn { background: var(--gray); border: 1.5px solid var(--gray-2); border-radius: 10px; padding: 12px 24px; color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+  .download-btn:hover { background: var(--gray-2); }
+  .error-msg { display: none; background: #FFF0EC; border: 1.5px solid #FFCBB8; border-radius: 10px; padding: 14px 16px; color: #CC3300; font-size: 13px; margin-top: 16px; word-break: break-all; }
+  .error-msg.visible { display: block; }
+  .step { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .step-text { font-size: 13px; color: var(--gray-3); }
+</style>
+</head>
+<body>
+<div class="badge">OK AI CHARACTER</div>
+<h1>원하는 <span>읏맨</span>을<br>만들어보세요</h1>
+<p class="subtitle">입력창에 직접입력 또는 아래 예시버튼을 클릭해보세요</p>
+
+<div class="card">
+  <div class="section-label">어떤 읏맨이 필요하세요?</div>
+  <textarea id="userInput" placeholder="예: 피자 먹는 읏맨"></textarea>
+  <div class="examples">
+    <span class="example-tag" onclick="setExample('‘안녕하세요’ 말풍선을 머리 위에 띄우고 밝은 표정으로 손을 흔들며 인사하는 읏맨')">손 흔들며 인사하는 읏맨</span>
+    <span class="example-tag" onclick="setExample('편안한 오버핏 후드티를 입고 따뜻한 커피 머그잔을 든 채 창가에 다리를 꼬고 앉아 부드러운 미소를 짓는 여유롭고 평온한 모습')">후드티 입고 커피 마시는 읏맨</span>
+    <span class="example-tag" onclick="setExample('소형 AI 로봇을 껴안고 기뻐하는 읏맨')">AI 로봇 껴안은 읏맨</span>
+  </div>
+  <button class="generate-btn" id="generateBtn" onclick="generate()">✦ 읏맨 생성하기</button>
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<div class="result-area" id="resultArea">
+  <div class="result-card">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>
+        <div class="step" id="step1"><div class="dot"></div><span class="step-text">생성 요청 중...</span></div>
+        <div class="step" id="step2" style="display:none"><div class="dot"></div><span class="step-text">AI가 읏맨 생성 중... (30초~2분 소요)</span></div>
+        <div class="step" id="step3" style="display:none"><div class="dot"></div><span class="step-text">배경 제거 중...</span></div>
+      </div>
+      <div class="loading-prompt" id="loadingPrompt"></div>
+    </div>
+    <div class="result-image-wrap" id="resultImageWrap">
+      <img class="result-image" id="resultImage" alt="생성된 읏맨">
+      <a class="download-btn" id="downloadBtn">⬇ 이미지 다운로드</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function setExample(t) { document.getElementById('userInput').value = t; }
+
+function showStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('step' + i).style.display = i === n ? 'flex' : 'none';
+  }
+}
+
+const POLL_MS = 5000;
+const POLL_MAX = 60; // 5분
+
+async function pollJob(jobId) {
+  for (let i = 0; i < POLL_MAX; i++) {
+    await new Promise(r => setTimeout(r, POLL_MS));
+    const res = await fetch('/api/job?id=' + encodeURIComponent(jobId));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (data.status === 'success') return data;
+    if (['failure', 'failed', 'canceled', 'cancelled'].includes(data.status)) {
+      throw new Error('이미지 생성에 실패했어요 (' + data.status + ')');
+    }
+  }
+  throw new Error('5분이 초과됐어요. 다시 시도해주세요.');
+}
+
+async function postJSON(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || JSON.stringify(data));
+  return data;
+}
+
+// 진행 상태를 sessionStorage에 저장 — 새로고침돼도 이어서 폴링한다.
+const RUN_KEY = 'okman-run';
+const saveRun = (s) => sessionStorage.setItem(RUN_KEY, JSON.stringify(s));
+const loadRun = () => { try { return JSON.parse(sessionStorage.getItem(RUN_KEY)); } catch { return null; } };
+const clearRun = () => sessionStorage.removeItem(RUN_KEY);
+
+function showLoading(input) {
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('resultArea').classList.add('visible');
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('resultImageWrap').classList.remove('visible');
+  document.getElementById('loadingPrompt').textContent = '"' + input + '"';
+}
+
+async function generate() {
+  const input = document.getElementById('userInput').value.trim();
+  const err = document.getElementById('errorMsg');
+  err.classList.remove('visible');
+  if (!input) { err.textContent = '원하는 읏맨을 입력해주세요.'; err.classList.add('visible'); return; }
+
+  showLoading(input);
+  showStep(1);
+
+  try {
+    // ① 이미지 생성 (서버가 고정 템플릿 + 캐릭터 레퍼런스로 호출)
+    const g = await postJSON('/api/generate', { prompt: input });
+    await runPipeline({ phase: 'gen', jobId: g.jobId, input });
+  } catch (e) {
+    failRun(e);
+  }
+}
+
+// phase: 'gen'(①생성 폴링부터) | 'rmbg'(②배경제거 폴링부터)
+async function runPipeline(state) {
+  saveRun(state);
+  try {
+    if (state.phase === 'gen') {
+      showStep(2);
+      const gen = await pollJob(state.jobId);
+
+      // ② 배경 제거 — 다운로드는 항상 배경 제거된 결과로
+      const rb = await postJSON('/api/remove-bg', { assetId: gen.assetIds[0] });
+      state = { ...state, phase: 'rmbg', jobId: rb.jobId };
+      saveRun(state);
+    }
+    showStep(3);
+    const fin = await pollJob(state.jobId);
+    clearRun();
+    showResult(fin.images[0], fin.assetIds[0]);
+    document.getElementById('generateBtn').disabled = false;
+  } catch (e) {
+    failRun(e);
+  }
+}
+
+function failRun(e) {
+  clearRun();
+  const err = document.getElementById('errorMsg');
+  document.getElementById('loading').classList.remove('visible');
+  err.textContent = '오류: ' + e.message;
+  err.classList.add('visible');
+  document.getElementById('generateBtn').disabled = false;
+}
+
+// 페이지 로드 시 진행 중이던 작업이 있으면 이어서 폴링
+(function resume() {
+  const saved = loadRun();
+  if (!saved || !saved.jobId) return;
+  document.getElementById('userInput').value = saved.input || '';
+  showLoading(saved.input || '');
+  runPipeline(saved);
+})();
+
+function showResult(imageUrl, assetId) {
+  document.getElementById('resultImage').src = imageUrl;
+  document.getElementById('downloadBtn').href = '/api/download?asset=' + encodeURIComponent(assetId);
+  document.getElementById('loading').classList.remove('visible');
+  document.getElementById('resultImageWrap').classList.add('visible');
+}
+</script>
+</body>
+</html>
