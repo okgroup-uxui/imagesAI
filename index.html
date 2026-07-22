@@ -584,7 +584,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 #agentPanel iframe{
   width:100%;height:100%;
   border:none;display:block;
+  position:relative;z-index:1;
+  filter:brightness(0.35) saturate(0.55) contrast(0.95);
+  transition:filter 0.7s ease;
 }
+#agentPanel.open iframe{
+  filter:brightness(1) saturate(1) contrast(1);
+}
+
+/* 다크(OKO) → 라이트(에이전트) 전환을 부드럽게 덮어주는 스크림 */
+#agentScrim{
+  position:absolute;inset:0;z-index:2;
+  background:#06070d;
+  opacity:1;
+  pointer-events:none;
+  transition:opacity 0.55s ease;
+}
+#agentScrim.hide{opacity:0;}
 
 /* ── ORB ERROR SHAKE ──────────────────────────── */
 @keyframes orbShake{
@@ -738,6 +754,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
   <!-- 에이전트 iframe 패널 -->
   <div id="agentPanel">
     <iframe id="agentFrame" src="" title="Agent"></iframe>
+    <div id="agentScrim"></div>
   </div>
   <button id="agentClose" title="닫기">✕</button>
 </div><!-- /app -->
@@ -1888,7 +1905,9 @@ function openAgentPanel(url) {
   const panel  = document.getElementById('agentPanel');
   const frame  = document.getElementById('agentFrame');
   const btn    = document.getElementById('agentClose');
+  const scrim  = document.getElementById('agentScrim');
 
+  scrim.classList.remove('hide'); // 매번 새로 열 때 다크 스크림부터 시작
   frame.src = url;
   panel.classList.remove('open');
   panel.classList.add('opening');
@@ -1898,6 +1917,12 @@ function openAgentPanel(url) {
     panel.classList.remove('opening');
     panel.classList.add('open');
     btn.classList.add('on');
+
+    // 패널이 다 펼쳐진 다음, 다크 스크림을 서서히 걷어내며
+    // 동시에 iframe 필터도 밝아져서 색상 전환이 부드럽게 이어짐
+    requestAnimationFrame(() => {
+      scrim.classList.add('hide');
+    });
   }, 560);
 }
 
@@ -1905,6 +1930,7 @@ function closeAgentPanel() {
   const panel = document.getElementById('agentPanel');
   const frame = document.getElementById('agentFrame');
   const btn   = document.getElementById('agentClose');
+  const scrim = document.getElementById('agentScrim');
 
   panel.style.transition = 'transform 0.35s cubic-bezier(0.7,0,0.84,0), border-radius 0.35s ease, opacity 0.35s ease';
   panel.style.transform = 'scale(0)';
@@ -1916,6 +1942,7 @@ function closeAgentPanel() {
     panel.classList.remove('open','opening');
     panel.style.cssText = '';
     frame.src = '';
+    scrim.classList.remove('hide'); // 다음 오픈을 위해 다시 다크 상태로 리셋
   }, 380);
 }
 
