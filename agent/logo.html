@@ -29,11 +29,17 @@
   --border: rgba(200,140,60,0.22);
   --text-muted: rgba(255,225,180,0.55);
   --text-dim: rgba(200,140,60,0.4);
+  --radius: 12px;
   --radius-sm: 8px;
   --max-w: 960px;
 }
 
-html, body { height: 100%; }
+html {
+  scroll-behavior: smooth;
+  scrollbar-color: var(--ok) rgba(255,255,255,0.03);
+  scrollbar-width: thin;
+}
+
 body {
   font-family: 'OKLight', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
@@ -43,13 +49,29 @@ body {
   flex-direction: column;
   align-items: center;
   position: relative;
-  overflow-x: hidden;
 }
+/* ── 커스텀 스크롤바 ──────────────────────────────── */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{
+  background: rgba(255,255,255,0.02);
+  border-left: 1px solid var(--border);
+}
+::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, var(--ok2), var(--ok) 60%, var(--ok3));
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 8px var(--okglow2);
+}
+::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(180deg, var(--ok2), var(--ok2) 60%, var(--ok));
+  box-shadow: 0 0 12px var(--okglow);
+}
+::-webkit-scrollbar-corner{ background: transparent; }
 body::before{
-  content:'';position:fixed;inset:0;z-index:300;pointer-events:none;
+  content:'';position:fixed;inset:0;z-index:200;pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px);
 }
-.hud-corner{position:fixed;z-index:250;width:36px;height:36px;pointer-events:none;}
+.hud-corner{position:fixed;z-index:150;width:36px;height:36px;pointer-events:none;}
 .hud-corner.tl{top:16px;left:16px;border-top:1.5px solid var(--ok);border-left:1.5px solid var(--ok);}
 .hud-corner.tr{top:16px;right:16px;border-top:1.5px solid var(--ok);border-right:1.5px solid var(--ok);}
 .hud-corner.bl{bottom:16px;left:16px;border-bottom:1.5px solid var(--ok);border-left:1.5px solid var(--ok);}
@@ -64,30 +86,86 @@ body::before{
 .hud-corner.br::before{bottom:-1px;right:8px;width:4px;height:1px;}
 .hud-corner.br::after{bottom:8px;right:-1px;width:1px;height:4px;}
 
+/* ── 위로 가기 버튼 ───────────────────────────────── */
+#toTopBtn{
+  position: fixed; right: 24px; bottom: 24px; z-index: 140;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--ok);
+  color: var(--ok2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 14px var(--okglow2);
+  opacity: 0; transform: translateY(12px) scale(.9);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease, box-shadow .2s, border-color .2s;
+}
+#toTopBtn.show{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+#toTopBtn:hover{ border-color: var(--ok2); box-shadow: 0 0 20px var(--okglow); }
+#toTopBtn::before, #toTopBtn::after{
+  content:''; position:absolute; width:8px; height:8px;
+  border-top:1.5px solid var(--dim); opacity:.6;
+}
+#toTopBtn::before{ top:2px; left:2px; border-left:1.5px solid var(--dim); }
+#toTopBtn::after{ top:2px; right:2px; border-right:1.5px solid var(--dim); transform:scaleX(-1); }
+
 #hudTop{
   width:100%;display:flex;justify-content:space-between;align-items:center;
   padding:20px 40px 0;box-sizing:border-box;
-  position:relative;z-index:60;flex-shrink:0;
 }
 .hud-label{
   font-family:'Orbitron',monospace;font-size:11px;letter-spacing:0.2em;
   color:rgba(200,140,60,0.8);text-transform:uppercase;
 }
 .hud-brand{
-  position:absolute; left:50%; transform:translateX(-50%);
   font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:0.3em;
-  color:var(--ok);text-shadow:0 0 14px var(--okglow);white-space:nowrap;
+  color:var(--ok);text-shadow:0 0 14px var(--okglow);
+  position: absolute; left: 50%; transform: translateX(-50%);
 }
 .hud-status{display:flex;align-items:center;gap:7px;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:0.18em;color:var(--ok);}
 .hud-status .dot{width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--okglow);animation:hudblink 1.6s ease-in-out infinite;}
 @keyframes hudblink{0%,100%{opacity:1;}50%{opacity:0.15;}}
 
+/* ── 진입 애니메이션 ───────────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(14px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes cornerDraw{
+  from{opacity:0;transform:scale(.6);}
+  to{opacity:1;transform:scale(1);}
+}
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(16px) scale(.97);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+@keyframes breathe{
+  0%,100%{box-shadow:0 0 20px var(--okglow2);}
+  50%{box-shadow:0 0 32px var(--okglow);}
+}
+@keyframes sweep{
+  from{transform:translateX(-120%) skewX(-12deg);}
+  to{transform:translateX(220%) skewX(-12deg);}
+}
+@keyframes countFlash{
+  0%{opacity:0.3;transform:translateY(2px);}
+  100%{opacity:1;transform:translateY(0);}
+}
+
+.hud-corner{animation:cornerDraw .5s ease both;}
+.hud-corner.tl{animation-delay:.05s;}
+.hud-corner.tr{animation-delay:.1s;}
+.hud-corner.bl{animation-delay:.15s;}
+.hud-corner.br{animation-delay:.2s;}
+
+#hudTop{opacity:0;animation:fadeUp .5s ease .1s both;}
+header{opacity:0;animation:fadeUp .5s ease .22s both;}
+.search-wrap{opacity:0;animation:fadeUp .5s ease .34s both;}
+.dl-all-wrap{opacity:0;animation:fadeUp .5s ease .3s both;}
+
 header {
   width: 100%;
-  padding: 20px 40px 20px;
+  padding: 28px 40px 24px;
   border-bottom: 1px solid var(--border);
   box-sizing: border-box;
-  position: relative; z-index: 60; flex-shrink: 0;
 }
 .header-inner {
   max-width: var(--max-w);
@@ -109,31 +187,31 @@ header {
 }
 .header-title { font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
 .header-sub { font-size: 11px; color: var(--dim); font-family:'Orbitron',monospace; letter-spacing: 0.1em; text-transform: uppercase; }
-.header-count { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; margin-top: 4px; }
+.header-count { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; margin-top: 4px; display:inline-block; }
+.header-count.flash { animation: countFlash .3s ease; }
 
 .search-wrap {
   width: 100%;
-  padding: 18px 40px 0;
+  padding: 24px 40px 0;
   display: flex;
   justify-content: center;
   box-sizing: border-box;
-  position: relative; z-index: 60; flex-shrink: 0;
 }
-.search-box { position: relative; width: 100%; max-width: 420px; }
+.search-box { position: relative; width: 100%; max-width: 480px; }
 .search-box input {
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 10px 16px 10px 40px;
-  font-size: 13px;
+  border-radius: var(--radius-sm);
+  padding: 11px 16px 11px 44px;
+  font-size: 14px;
   font-family: inherit;
   color: var(--text);
   outline: none;
-  transition: border-color .2s, box-shadow .2s;
+  transition: border-color .2s;
 }
 .search-box input::placeholder { color: var(--text-dim); }
-.search-box input:focus { border-color: var(--ok); box-shadow: 0 0 0 3px var(--okglow2); }
+.search-box input:focus { border-color: var(--ok); }
 .search-icon {
   position: absolute; left: 14px; top: 50%;
   transform: translateY(-50%);
@@ -148,78 +226,136 @@ header {
 }
 .search-clear.show { display: block; }
 
-/* ── 로고들이 떠다니는 공간 ───────────────────────── */
-.space {
-  position: relative;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 24px 40px 0;
+  max-width: var(--max-w);
   width: 100%;
-  flex: 1;
-  min-height: 420px;
-  overflow: hidden;
+  box-sizing: border-box;
 }
-.space-empty{
-  position:absolute; inset:0; display:none;
-  align-items:center; justify-content:center;
-  color: var(--text-dim); font-size: 13px; font-family:'OKLight','Pretendard',sans-serif;
-  z-index: 5;
-}
-.space-empty.show{ display:flex; }
 
-.orb{
-  position: absolute;
-  width: 92px; height: 92px;
-  border-radius: 50%;
+.card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
+  border-radius: var(--radius);
+  overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 4px 22px rgba(0,0,0,.45);
-  transition: border-color .25s ease, box-shadow .25s ease, opacity .3s ease, filter .3s ease;
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+  opacity: 0;
+  animation: cardIn .45s cubic-bezier(.22,.9,.32,1) both;
 }
-.orb img{ max-width: 100%; max-height: 100%; object-fit: contain; }
-.orb .no-img{ font-size: 10px; color: var(--text-dim); text-align: center; }
-.orb-inner{
-  transition: transform .2s ease;
+.card::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(100deg,transparent 40%,var(--okglow2) 50%,transparent 60%);
+  transform:translateX(-120%) skewX(-12deg);
+  opacity:0;transition:opacity .15s;
 }
-.orb:hover{ border-color: var(--ok); box-shadow: 0 0 26px var(--okglow); z-index: 20; }
-.orb:hover .orb-inner{ transform: scale(1.1); }
-.orb-label{
-  position: absolute; top: 100%; left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  font-size: 11px; color: var(--text);
-  background: rgba(6,7,13,.9); border: 1px solid var(--dim2);
-  padding: 4px 11px; border-radius: 20px; white-space: nowrap;
-  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+.card:hover::after{ opacity:1; animation:sweep .9s ease; }
+.card:hover {
+  border-color: var(--ok);
+  box-shadow: 0 4px 20px var(--okglow2);
+  transform: translateY(-2px);
 }
-.orb:hover .orb-label{ opacity: 1; }
-.orb.dimmed{ opacity: .1; filter: grayscale(1); pointer-events: none; }
-.orb.matched{ border-color: var(--ok2); box-shadow: 0 0 20px var(--okglow2); }
-.orb.grabbed{ animation: grabPulse .5s ease; border-color: #2f7a4a !important; box-shadow: 0 0 24px rgba(47,122,74,.5) !important; }
-@keyframes grabPulse{ 0%{ transform: scale(1); } 45%{ transform: scale(1.18); } 100%{ transform: scale(1); } }
-.orb-check{
-  position:absolute; inset:0; display:none;
-  align-items:center; justify-content:center;
-  background: rgba(6,7,13,.7); border-radius: 50%;
-  color:#6fcf97; font-size: 22px;
+.card-thumb {
+  height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); padding: 16px;
+  overflow: hidden;
 }
-.orb.grabbed .orb-check{ display:flex; }
-.orb.grabbed .orb-inner{ opacity: 0; }
+.card-thumb img { max-width: 100%; max-height: 88px; object-fit: contain; transition: transform .3s ease; }
+.card:hover .card-thumb img { transform: scale(1.06); }
+.card-thumb .no-img { font-size: 11px; color: var(--text-dim); }
+.card-info { padding: 12px 14px; border-top: 1px solid var(--border); }
+.card-name { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; }
+.card-dl {
+  margin-top: 10px; width: 100%;
+  background: transparent; border: 1px solid var(--ok); border-radius: 999px;
+  padding: 8px 0; font-size: 12px; font-family: inherit; font-weight: 500;
+  color: var(--ok2); cursor: pointer; transition: background .2s, border-color .2s, opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.card-dl:hover { background: var(--okglow2); box-shadow: 0 0 12px var(--okglow2); }
+.card-dl:disabled { opacity: .5; cursor: default; }
+.card-dl.done { background: rgba(47,122,74,0.15); border-color: #2f7a4a; color:#6fcf97; }
 
+.empty {
+  grid-column: 1/-1; padding: 80px 0;
+  text-align: center; color: var(--text-dim); font-size: 14px;
+}
+
+.dl-all-wrap {
+  padding: 40px;
+  max-width: var(--max-w); width: 100%; box-sizing: border-box;
+}
 .dl-all-btn {
-  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-  width: 220px; z-index: 60;
+  width: 220px; margin: 0 auto;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   background: var(--ok); border: none; border-radius: 999px;
   padding: 13px 0; font-size: 14px; font-family: inherit; font-weight: 600;
   color: #06070d; cursor: pointer; transition: background .2s, opacity .2s, box-shadow .2s;
   box-shadow: 0 0 20px var(--okglow2);
 }
-.dl-all-btn:hover { background: var(--ok2); box-shadow: 0 0 28px var(--okglow); }
-.dl-all-btn:disabled { opacity: .5; cursor: default; box-shadow: none; }
-.dl-all-btn.done { background: #2f7a4a; color:#fff; box-shadow: none; }
+.dl-all-btn:hover { background: var(--ok2); box-shadow: 0 0 28px var(--okglow); animation: none; }
+.dl-all-btn:disabled { opacity: .5; cursor: default; box-shadow: none; animation: none; }
+.dl-all-btn.done { background: #2f7a4a; color:#fff; box-shadow: none; animation: none; }
+.dl-all-btn:not(:disabled):not(.done) { animation: breathe 2.6s ease-in-out infinite; }
+
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.65); z-index: 100;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  opacity: 0; transition: opacity .18s ease;
+}
+.modal-bg.open { display: flex; opacity: 1; }
+@keyframes checkPop{
+  0%{transform:scale(.6);opacity:0;}
+  60%{transform:scale(1.15);opacity:1;}
+  100%{transform:scale(1);}
+}
+.card-dl.done svg, .modal-btn-dl svg, .dl-all-btn svg { transition: transform .2s; }
+.card-dl.done, .dl-all-btn.done { animation: checkPop .25s ease; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; width: min(480px, 92vw);
+  overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  animation: modalIn .2s ease;
+}
+@keyframes modalIn {
+  from { opacity:0; transform: scale(.96) translateY(8px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.modal-head {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-head-name { font-size: 15px; font-weight: 600; }
+.modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 24px; }
+.modal-preview {
+  width: 100%; height: 140px; background: var(--bg);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+.modal-preview img { max-width: 100%; max-height: 110px; object-fit: contain; }
+.modal-info { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.7; }
+.modal-info span { color: var(--text-dim); }
+.modal-btn-dl {
+  width: 100%; background: var(--ok); border: none; border-radius: 999px;
+  padding: 14px 0; font-size: 14px; font-family: inherit; font-weight: 600;
+  color: #06070d; cursor: pointer; transition: background .2s, box-shadow .2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 0 20px var(--okglow2);
+}
+.modal-btn-dl:hover { background: var(--ok2); box-shadow: 0 0 28px var(--okglow); }
+.modal-btn-dl:disabled { opacity: .5; cursor: default; box-shadow: none; }
 
 .toast {
-  position: fixed; bottom: 90px; left: 50%;
+  position: fixed; bottom: 32px; left: 50%;
   transform: translateX(-50%) translateY(80px);
   background: var(--surface); border: 1px solid var(--dim2); border-radius: 30px;
   padding: 10px 20px; font-size: 13px; color: #fff;
@@ -231,11 +367,10 @@ header {
 @media (max-width: 700px) {
   #hudTop { padding: 16px 20px 0; }
   .hud-label, .hud-status { display: none; }
-  header { padding: 16px 20px 16px; }
-  .search-wrap { padding: 14px 20px 0; }
-  .orb{ width: 72px; height: 72px; padding: 12px; }
-  .dl-all-btn{ width: 200px; bottom: 20px; }
-  .toast{ bottom: 78px; }
+  header { padding: 20px 20px 16px; }
+  .search-wrap { padding: 16px 20px 0; }
+  .grid { padding: 16px 20px 0; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+  .dl-all-wrap { padding: 16px 20px 40px; }
 }
 </style>
 </head>
@@ -254,8 +389,10 @@ header {
 <header>
   <div class="header-inner">
     <div class="header-dot"></div>
-    <div class="header-title">OK금융그룹 로고 다운로드</div>
-    <div class="header-sub">Logo Download System</div>
+    <div>
+      <div class="header-title">OK금융그룹 로고 다운로드</div>
+      <div class="header-sub">Logo Download System</div>
+    </div>
     <div class="header-count" id="countLabel">16개 브랜드</div>
   </div>
 </header>
@@ -270,15 +407,40 @@ header {
   </div>
 </div>
 
-<div class="space" id="space">
-  <div class="space-empty" id="spaceEmpty">검색 결과가 없습니다.</div>
+<div class="grid" id="grid"></div>
+
+<div class="dl-all-wrap">
+  <button class="dl-all-btn" id="dlAllBtn">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path d="M12 3v13M5 14l7 7 7-7"/><path d="M3 21h18"/>
+    </svg>
+    전체 다운로드 (16개)
+  </button>
 </div>
 
-<button class="dl-all-btn" id="dlAllBtn">
-  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-    <path d="M12 3v13M5 14l7 7 7-7"/><path d="M3 21h18"/>
+<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-head-name" id="modalName"></span>
+      <button class="modal-close" id="modalClose" aria-label="닫기">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-preview"><img id="modalImg" src="" alt=""></div>
+      <div class="modal-info" id="modalInfo"></div>
+      <button class="modal-btn-dl" id="modalDlBtn">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 3v13M5 14l7 7 7-7"/><path d="M3 21h18"/>
+        </svg>
+        ZIP 다운로드
+      </button>
+    </div>
+  </div>
+</div>
+
+<button id="toTopBtn" aria-label="맨 위로">
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+    <path d="M12 19V5M5 12l7-7 7 7"/>
   </svg>
-  전체 다운로드 (16개)
 </button>
 
 <div class="toast" id="toast" role="status"></div>
@@ -309,9 +471,64 @@ const BRANDS = [
   { id:'oksports_rugby', name:'OK저축은행 읏맨 럭비단',    tags:['럭비단','oksports_rugby','럭비'],                       zip:'oksports_rugby_ai.zip',   img:'ok_sports_rugby.png' },
 ];
 
+let currentBrand = null;
+
+function renderGrid(filter = '') {
+  const grid = document.getElementById('grid');
+  const q = filter.toLowerCase().trim();
+  const filtered = q
+    ? BRANDS.filter(b => b.name.toLowerCase().includes(q) || b.tags.some(t => t.toLowerCase().includes(q)))
+    : BRANDS;
+
+  const countEl = document.getElementById('countLabel');
+  countEl.textContent =
+    filtered.length === BRANDS.length ? `${BRANDS.length}개 브랜드` : `${filtered.length} / ${BRANDS.length}개`;
+  countEl.classList.remove('flash');
+  requestAnimationFrame(() => countEl.classList.add('flash'));
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty">검색 결과가 없습니다.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map((b, i) => `
+    <div class="card" data-id="${b.id}" style="animation-delay:${Math.min(i * 0.045, 0.4)}s" onclick="openModal('${b.id}')">
+      <div class="card-thumb">
+        <img src="${IMG_BASE}${b.img}" alt="${b.name}"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="no-img" style="display:none">미리보기 없음</span>
+      </div>
+      <div class="card-info">
+        <div class="card-name">${b.name}</div>
+        <button class="card-dl" onclick="event.stopPropagation();downloadBrand('${b.id}',this)">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 3v13M5 14l7 7 7-7"/>
+          </svg>
+          ZIP 다운로드
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
 function triggerDownload(url, filename) {
   const a = Object.assign(document.createElement('a'), { href: url, download: filename });
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function downloadBrand(id, btn) {
+  const b = BRANDS.find(x => x.id === id);
+  if (!b) return;
+  triggerDownload(ZIP_BASE + b.zip, b.zip);
+  if (btn) {
+    btn.disabled = true; btn.classList.add('done');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg> 완료';
+    setTimeout(() => {
+      btn.disabled = false; btn.classList.remove('done');
+      btn.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 3v13M5 14l7 7 7-7"/></svg> ZIP 다운로드';
+    }, 2000);
+  }
+  showToast(`✓ ${b.name} 다운로드 시작`);
 }
 
 function downloadAll() {
@@ -328,148 +545,68 @@ function downloadAll() {
   }, 3000);
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+function openModal(id) {
+  const b = BRANDS.find(x => x.id === id);
+  if (!b) return;
+  currentBrand = b;
+  document.getElementById('modalName').textContent = b.name;
+  document.getElementById('modalImg').src = IMG_BASE + b.img;
+  document.getElementById('modalInfo').innerHTML =
+    `<span>ZIP 파일명</span> ${b.zip}<br><span>포함 내용</span> AI 원본 (CMYK) + PNG × RGB/CMYK 세트`;
+  const dlBtn = document.getElementById('modalDlBtn');
+  dlBtn.disabled = false;
+  dlBtn.innerHTML = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 3v13M5 14l7 7 7-7"/><path d="M3 21h18"/></svg> ZIP 다운로드';
+  document.getElementById('modalBg').classList.add('open');
 }
 
-// ── 로고를 잡으면(클릭하면) 바로 다운로드 ──────────────
-function grabOrb(brand, el) {
-  if (el.classList.contains('grabbed')) return;
-  triggerDownload(ZIP_BASE + brand.zip, brand.zip);
-  el.classList.add('grabbed');
-  showToast(`✓ ${brand.name} 다운로드 시작`);
-  setTimeout(() => el.classList.remove('grabbed'), 900);
-}
-
-// ── 떠다니는 오브 물리 엔진 ──────────────────────────
-// 각 오브는 느린 속도로 떠다니다 공간 벽에 부딪히면 반사되고,
-// 마우스가 다가오면 살짝 밀려나며, 호버 중엔 잠시 멈춰서 읽기 편하게 한다.
-const space = document.getElementById('space');
-const orbs = [];
-
-function buildOrbs() {
-  const rect = space.getBoundingClientRect();
-  const w = rect.width, h = rect.height;
-  const size = window.innerWidth <= 700 ? 72 : 92;
-  const cols = Math.ceil(Math.sqrt(BRANDS.length * (w / Math.max(h, 1))));
-  const rows = Math.ceil(BRANDS.length / cols);
-  const cellW = w / cols, cellH = h / rows;
-
-  BRANDS.forEach((b, i) => {
-    const col = i % cols, row = Math.floor(i / cols);
-    const jitterX = (Math.random() - 0.5) * (cellW * 0.4);
-    const jitterY = (Math.random() - 0.5) * (cellH * 0.4);
-    const x = Math.min(Math.max(col * cellW + cellW / 2 - size / 2 + jitterX, 4), Math.max(w - size - 4, 4));
-    const y = Math.min(Math.max(row * cellH + cellH / 2 - size / 2 + jitterY, 4), Math.max(h - size - 4, 4));
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 0.12 + Math.random() * 0.16;
-
-    const el = document.createElement('div');
-    el.className = 'orb';
-    el.dataset.id = b.id;
-    el.innerHTML = `
-      <div class="orb-inner">
-        <img src="${IMG_BASE}${b.img}" alt="${b.name}"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-        <span class="no-img" style="display:none">미리보기<br>없음</span>
-      </div>
-      <div class="orb-check">✓</div>
-      <span class="orb-label">${b.name}</span>
-    `;
-    el.addEventListener('click', () => grabOrb(b, el));
-    el.addEventListener('mouseenter', () => { orb.paused = true; });
-    el.addEventListener('mouseleave', () => { orb.paused = false; });
-    space.appendChild(el);
-
-    const orb = { brand: b, el, x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size, paused: false };
-    orbs.push(orb);
-  });
-}
-
-let mouseX = -9999, mouseY = -9999;
-space.addEventListener('mousemove', e => {
-  const rect = space.getBoundingClientRect();
-  mouseX = e.clientX - rect.left;
-  mouseY = e.clientY - rect.top;
-});
-space.addEventListener('mouseleave', () => { mouseX = -9999; mouseY = -9999; });
-
-function tick() {
-  const rect = space.getBoundingClientRect();
-  const w = rect.width, h = rect.height;
-
-  orbs.forEach(o => {
-    if (!o.paused) {
-      // 마우스 근처면 살짝 밀려남
-      const cx = o.x + o.size / 2, cy = o.y + o.size / 2;
-      const dx = cx - mouseX, dy = cy - mouseY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const repelRadius = 130;
-      if (dist < repelRadius && dist > 0.01) {
-        const force = (repelRadius - dist) / repelRadius * 0.06;
-        o.vx += (dx / dist) * force;
-        o.vy += (dy / dist) * force;
-      }
-      // 속도 제한(너무 빨라지지 않게)
-      const maxV = 0.5;
-      const v = Math.sqrt(o.vx * o.vx + o.vy * o.vy);
-      if (v > maxV) { o.vx = (o.vx / v) * maxV; o.vy = (o.vy / v) * maxV; }
-
-      o.x += o.vx;
-      o.y += o.vy;
-
-      if (o.x <= 0) { o.x = 0; o.vx = Math.abs(o.vx); }
-      if (o.x >= w - o.size) { o.x = w - o.size; o.vx = -Math.abs(o.vx); }
-      if (o.y <= 0) { o.y = 0; o.vy = Math.abs(o.vy); }
-      if (o.y >= h - o.size) { o.y = h - o.size; o.vy = -Math.abs(o.vy); }
-
-      o.el.style.left = o.x + 'px';
-      o.el.style.top = o.y + 'px';
-    }
-  });
-  requestAnimationFrame(tick);
-}
-
-window.addEventListener('resize', () => {
-  const rect = space.getBoundingClientRect();
-  const w = rect.width, h = rect.height;
-  orbs.forEach(o => {
-    o.x = Math.min(o.x, Math.max(w - o.size, 0));
-    o.y = Math.min(o.y, Math.max(h - o.size, 0));
-  });
-});
-
-// ── 검색: 매칭되는 오브만 살리고 나머지는 흐리게 ────────
-function applySearch(filter) {
-  const q = filter.toLowerCase().trim();
-  let matchCount = 0;
-  orbs.forEach(o => {
-    const matched = !q || o.brand.name.toLowerCase().includes(q) || o.brand.tags.some(t => t.toLowerCase().includes(q));
-    o.el.classList.toggle('dimmed', !matched);
-    o.el.classList.toggle('matched', !!q && matched);
-    if (matched) matchCount++;
-  });
-  document.getElementById('countLabel').textContent =
-    !q ? `${BRANDS.length}개 브랜드` : `${matchCount} / ${BRANDS.length}개`;
-  document.getElementById('spaceEmpty').classList.toggle('show', matchCount === 0);
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+  currentBrand = null;
 }
 
 const searchInput = document.getElementById('searchInput');
 const searchClear = document.getElementById('searchClear');
 searchInput.addEventListener('input', () => {
   searchClear.classList.toggle('show', searchInput.value.length > 0);
-  applySearch(searchInput.value);
+  renderGrid(searchInput.value);
 });
-searchClear.onclick = () => { searchInput.value = ''; searchClear.classList.remove('show'); applySearch(''); searchInput.focus(); };
-document.addEventListener('keydown', e => {
-  if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); }
-});
-document.getElementById('dlAllBtn').onclick = downloadAll;
+searchClear.onclick = () => { searchInput.value=''; searchClear.classList.remove('show'); renderGrid(''); searchInput.focus(); };
 
-buildOrbs();
-requestAnimationFrame(tick);
+document.getElementById('modalClose').onclick = closeModal;
+document.getElementById('modalBg').onclick = e => { if (e.target===e.currentTarget) closeModal(); };
+document.getElementById('dlAllBtn').onclick = downloadAll;
+document.getElementById('modalDlBtn').onclick = () => {
+  if (!currentBrand) return;
+  const btn = document.getElementById('modalDlBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg> 다운로드 중…';
+  downloadBrand(currentBrand.id, null);
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg> 완료';
+  setTimeout(closeModal, 700);
+};
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') closeModal();
+  if (e.key==='/' && document.activeElement!==searchInput) { e.preventDefault(); searchInput.focus(); }
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ── 위로가기 ─────────────────────────────────────
+const toTopBtn = document.getElementById('toTopBtn');
+function onScroll() {
+  const doc = document.documentElement;
+  const scrollTop = doc.scrollTop || document.body.scrollTop;
+  toTopBtn.classList.toggle('show', scrollTop > 320);
+}
+document.addEventListener('scroll', onScroll, { passive: true });
+toTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+onScroll();
+
+renderGrid();
 </script>
 </body>
 </html>
