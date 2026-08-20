@@ -614,6 +614,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
 }
 #orbWrap.orb-error{animation:orbShake 0.5s ease;}
 
+/* ── 인트로 스킵 버튼 ──────────────────────────── */
+#skipIntroBtn{
+  position:absolute;left:50%;top:100%;z-index:20;
+  display:flex;align-items:center;gap:6px;
+  padding:8px 16px;
+  background:rgba(10,14,20,0.55);
+  border:1px solid rgba(224,125,8,0.45);
+  border-radius:999px;
+  font-family:'Orbitron',monospace;font-size:11px;letter-spacing:0.18em;
+  color:rgba(240,190,120,0.9);text-transform:uppercase;
+  cursor:pointer;white-space:nowrap;
+  opacity:0;pointer-events:none;
+  transform:translate(-50%,20px);
+  transition:opacity 0.35s ease, transform 0.35s ease, border-color 0.2s ease, background 0.2s ease;
+}
+#skipIntroBtn.show{opacity:1;pointer-events:auto;transform:translate(-50%,40px);}
+#skipIntroBtn:hover{
+  border-color:rgba(245,170,32,0.9);
+  background:rgba(224,125,8,0.16);
+  color:#fff;
+}
+#skipIntroBtn svg{display:block;flex:none;}
+
 /* ── OK 로고 ───────────────────────────────────── */
 #okLogo{
   position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
@@ -715,6 +738,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
         </div>
         <div id="touchLabel" class="tlabel">준비됐습니다.<br/>클릭해 주십시오.</div>
       </div>
+
+      <!-- 인트로 스킵 버튼 (오브 바로 아래) -->
+      <button id="skipIntroBtn" type="button">
+        <span>SKIP</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M1 1 L6 5 L1 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 1 L10 5 L5 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
       <div id="inputWrap">
         <div class="input-frame">
           <input type="text" id="pInput" placeholder="어떤 이미지가 필요하십니까" />
@@ -1600,28 +1633,59 @@ setTimeout(()=>{
 
 /* ─── INTRO (부팅 후) ──────────────────────────── */
 const steps=[{id:'m0',hold:1400},{id:'m1',hold:1600},{id:'m2',hold:1900}];
+let introTimeouts=[];
+function it(fn,delay){ const id=setTimeout(fn,delay); introTimeouts.push(id); return id; }
 function runIntro(){
+  introTimeouts.forEach(id=>clearTimeout(id));
+  introTimeouts=[];
+  document.getElementById('skipIntroBtn').classList.add('show');
+
   let d=200;
   steps.forEach(s=>{
     const el=document.getElementById(s.id);
-    setTimeout(()=>{el.classList.add('on');triggerTalk();},d);
+    it(()=>{el.classList.add('on');triggerTalk();},d);
     d+=s.hold;
-    setTimeout(()=>el.classList.remove('on'),d);
+    it(()=>el.classList.remove('on'),d);
     d+=500;
   });
-  setTimeout(()=>{
+  it(()=>{
     titleShown=true;
     layout(); // 위치 즉시 계산 → CSS transition이 부드럽게 이동
-    setTimeout(()=>{
+    it(()=>{
       document.getElementById('tl0').classList.add('on');
-      setTimeout(()=>document.getElementById('tl1').classList.add('on'),220);
-      setTimeout(()=>{
+      it(()=>document.getElementById('tl1').classList.add('on'),220);
+      it(()=>{
         document.getElementById('touchBtn').classList.add('on');
+        document.getElementById('skipIntroBtn').classList.remove('show');
         startLabelRotation();
       },350);
     },80);
   },d);
 }
+
+// 인트로("말하는" 구간) 스킵 → 바로 에이전트 선택(인풋+칩) 화면으로 이동
+function skipIntro(){
+  if(phase==='input') return; // 이미 인풋 단계면 무시
+
+  introTimeouts.forEach(id=>clearTimeout(id));
+  introTimeouts=[];
+  stopLabelRotation();
+
+  ['m0','m1','m2'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById('touchBtn').classList.remove('on');
+  document.getElementById('skipIntroBtn').classList.remove('show');
+
+  titleShown=true;
+  phase='input'; inputMode=true;
+  layout();
+
+  document.getElementById('tl0').classList.add('on');
+  document.getElementById('tl1').classList.add('on');
+  document.getElementById('inputWrap').classList.add('on');
+  document.getElementById('genBtn').classList.add('on');
+  setTimeout(()=>{placeChips();setTimeout(animChips,80);},80);
+}
+document.getElementById('skipIntroBtn').addEventListener('click',skipIntro);
 
 /* ─── TOUCH LABEL ──────────────────────── */
 function startLabelRotation(){ /* 로테이션 비활성화 — 고정 텍스트 유지 */ }
@@ -1662,6 +1726,7 @@ document.getElementById('touchBtn').addEventListener('click',()=>{
   stopLabelRotation();
   phase='input';
   document.getElementById('touchBtn').classList.remove('on');
+  document.getElementById('skipIntroBtn').classList.remove('show');
   setTimeout(()=>{
     inputMode=true;
     layout();
